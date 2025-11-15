@@ -46,7 +46,7 @@ export default function Home() {
 
   const heroSlides = [
     {
-      title: 'Selamat Datang di TechSphere Audio',
+      title: 'NAURA ELECTRONIC',
       description: 'Sistem suara berkualitas tinggi untuk para profesional dan penggemar.',
       bgColor: 'bg-card',
     },
