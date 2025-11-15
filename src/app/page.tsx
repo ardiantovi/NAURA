@@ -34,7 +34,7 @@ export default function Home() {
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8">
         {/* Hero Section */}
-        <section className="text-center bg-card p-8 md:p-16 rounded-xl mb-12 shadow-md">
+        <section className="text-center bg-card p-8 md:p-16 rounded-xl mb-12 shadow-md animate-in fade-in slide-in-from-top-5 duration-700">
           <h1 className="text-4xl md:text-6xl font-bold font-headline text-primary mb-4 tracking-tight">
             Welcome to TechSphere Audio
           </h1>
