@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import type { Category, Product } from '@/lib/types';
+import type { Product } from '@/lib/types';
 import { categories, products, brands } from '@/lib/data';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -23,7 +23,6 @@ import Autoplay from "embla-carousel-autoplay";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
 
   const plugin = useRef<any>(null);
@@ -38,10 +37,9 @@ export default function Home() {
   };
 
   const filteredProducts = products.filter((product) => {
-    const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
     const matchesBrand = selectedBrand ? product.brand === selectedBrand : true;
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesBrand && matchesSearch;
+    return matchesBrand && matchesSearch;
   });
 
   const heroSlides = [
@@ -108,30 +106,6 @@ export default function Home() {
           {/* Sidebar */}
           <aside>
             <Card className="p-6 sticky top-28">
-              <h3 className="font-headline text-xl font-semibold mb-4 text-primary">Categories</h3>
-              <div className="space-y-2">
-                <Button
-                  variant={selectedCategory === null ? 'secondary' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => setSelectedCategory(null)}
-                >
-                  All Products
-                </Button>
-                {categories.map((category) => (
-                  <Button
-                    key={category.id}
-                    variant={selectedCategory === category.name ? 'secondary' : 'ghost'}
-                    className="w-full justify-start"
-                    onClick={() => setSelectedCategory(category.name)}
-                  >
-                    <category.icon className="mr-2 h-4 w-4" />
-                    {category.name}
-                  </Button>
-                ))}
-              </div>
-
-              <Separator className="my-6" />
-
               <h3 className="font-headline text-xl font-semibold mb-4 text-primary">Brands</h3>
               <div className="space-y-2">
                 <Button
