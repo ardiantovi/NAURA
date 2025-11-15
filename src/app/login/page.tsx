@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { onAuthStateChanged, getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
 
 export default function LoginPage() {
@@ -37,16 +37,30 @@ export default function LoginPage() {
         toast({ title: "Login successful!"});
         router.push('/admin');
     } catch (err: any) {
-        let errorMessage = "Failed to login. Please check your credentials.";
-        if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-            errorMessage = "Invalid email or password.";
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+            // If user does not exist, create a new one
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                toast({ title: "Admin account created and logged in!" });
+                router.push('/admin');
+            } catch (createErr: any) {
+                const errorMessage = createErr.message || "Failed to create account.";
+                setError(errorMessage);
+                toast({
+                    variant: "destructive",
+                    title: "Account Creation Failed",
+                    description: errorMessage,
+                });
+            }
+        } else {
+            const errorMessage = err.message || "An unknown error occurred.";
+            setError(errorMessage);
+            toast({
+                variant: "destructive",
+                title: "Login Failed",
+                description: errorMessage,
+            });
         }
-        setError(errorMessage);
-        toast({
-            variant: "destructive",
-            title: "Login Failed",
-            description: errorMessage,
-        });
     }
   };
   
