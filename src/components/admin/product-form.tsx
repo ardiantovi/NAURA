@@ -23,12 +23,21 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useEffect } from 'react';
+import { brands } from '@/lib/data';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   price: z.coerce.number().positive('Price must be positive'),
+  brand: z.string().min(1, 'Brand is required'),
   images: z.string().transform(val => val.split(',').map(s => s.trim()).filter(Boolean)),
   specs: z.string().transform(val => {
     try {
@@ -54,6 +63,7 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
     name: product?.name || '',
     description: product?.description || '',
     price: product?.price || 0,
+    brand: product?.brand || '',
     images: product?.images?.join(', ') || '',
     specs: product?.specs ? JSON.stringify(product.specs, null, 2) : '',
   };
@@ -71,6 +81,7 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
         name: '',
         description: '',
         price: 0,
+        brand: '',
         images: '',
         specs: '',
       });
@@ -119,6 +130,30 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
                 )}
               />
             </div>
+            <FormField
+              control={form.control}
+              name="brand"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Brand</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a brand" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {brands.map((brand) => (
+                        <SelectItem key={brand.id} value={brand.name}>
+                          {brand.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
                 control={form.control}
                 name="description"
