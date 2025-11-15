@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useAuth } from '@/firebase'; // Using custom hooks
+import { useUser, useAuth, useFirestore } from '@/firebase'; // Using custom hooks
 import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -11,7 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { onAuthStateChanged, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, UserCredential } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 
 export default function LoginPage() {
@@ -21,6 +22,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -28,6 +30,13 @@ export default function LoginPage() {
       router.push('/admin');
     }
   }, [user, isUserLoading, router]);
+
+  const grantAdminRole = async (userId: string) => {
+    if (!firestore) return;
+    const adminRoleRef = doc(firestore, 'roles_admin', userId);
+    // The document can be empty, its existence is what grants the role.
+    await setDoc(adminRoleRef, {});
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +49,10 @@ export default function LoginPage() {
         if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
             // If user does not exist, create a new one
             try {
-                await createUserWithEmailAndPassword(auth, email, password);
+                const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const newUser = userCredential.user;
+                // After creating the user, grant them the admin role
+                await grantAdminRole(newUser.uid);
                 toast({ title: "Admin account created and logged in!" });
                 router.push('/admin');
             } catch (createErr: any) {
