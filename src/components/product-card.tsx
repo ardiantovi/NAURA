@@ -1,0 +1,45 @@
+import Link from 'next/link';
+import Image from 'next/image';
+import type { Product } from '@/lib/types';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
+
+interface ProductCardProps {
+  product: Product;
+}
+
+export default function ProductCard({ product }: ProductCardProps) {
+  const imageUrl = PlaceHolderImages.find((img) => img.id === product.images[0])?.imageUrl || `https://picsum.photos/seed/${product.id}/600/400`;
+  const imageHint = PlaceHolderImages.find((img) => img.id === product.images[0])?.imageHint || 'tech product';
+
+  return (
+    <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+      <CardHeader>
+        <Link href={`/products/${product.id}`} className="block">
+          <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-lg">
+            <Image
+              src={imageUrl}
+              alt={product.name}
+              width={600}
+              height={400}
+              className="object-cover w-full h-full transform transition-transform duration-300 group-hover:scale-105"
+              data-ai-hint={imageHint}
+            />
+          </div>
+        </Link>
+      </CardHeader>
+      <CardContent className="flex-grow">
+        <CardTitle className="text-lg font-headline font-medium mb-2 leading-tight h-14">
+          <Link href={`/products/${product.id}`}>{product.name}</Link>
+        </CardTitle>
+        <p className="text-xl font-semibold text-primary">${product.price.toFixed(2)}</p>
+      </CardContent>
+      <CardFooter>
+        <Button asChild className="w-full" variant="outline">
+          <Link href={`/products/${product.id}`}>View Details</Link>
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
