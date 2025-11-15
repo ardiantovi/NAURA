@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Category, Product } from '@/lib/types';
-import { categories, products } from '@/lib/data';
+import { categories, products, brands } from '@/lib/data';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import ProductCard from '@/components/product-card';
@@ -11,10 +11,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search, Zap } from 'lucide-react';
 import PersonalizedRecommendations from '@/components/personalized-recommendations';
+import { Separator } from '@/components/ui/separator';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
@@ -22,8 +24,9 @@ export default function Home() {
 
   const filteredProducts = products.filter((product) => {
     const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
+    const matchesBrand = selectedBrand ? product.brand === selectedBrand : true;
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesCategory && matchesBrand && matchesSearch;
   });
 
   return (
@@ -63,6 +66,29 @@ export default function Home() {
                   >
                     <category.icon className="mr-2 h-4 w-4" />
                     {category.name}
+                  </Button>
+                ))}
+              </div>
+
+              <Separator className="my-6" />
+
+              <h3 className="font-headline text-xl font-semibold mb-4 text-primary">Brands</h3>
+              <div className="space-y-2">
+                <Button
+                  variant={selectedBrand === null ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setSelectedBrand(null)}
+                >
+                  All Brands
+                </Button>
+                {brands.map((brand) => (
+                  <Button
+                    key={brand.id}
+                    variant={selectedBrand === brand.name ? 'secondary' : 'ghost'}
+                    className="w-full justify-start"
+                    onClick={() => setSelectedBrand(brand.name)}
+                  >
+                    {brand.name}
                   </Button>
                 ))}
               </div>

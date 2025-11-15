@@ -93,6 +93,7 @@ export default function ProductDetailPage() {
 
             {/* Product Info */}
             <div className="p-8 flex flex-col">
+              <p className="text-sm font-semibold text-primary mb-1">{product.brand}</p>
               <h1 className="text-3xl lg:text-4xl font-bold font-headline mb-2">{product.name}</h1>
               <p className="text-muted-foreground text-lg mb-4">{product.category}</p>
               <p className="text-4xl font-bold text-primary mb-6">${product.price.toFixed(2)}</p>
