@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'TechSphere - Professional Sound Systems',
+  title: 'NAURA ELECTRONIC - Professional Sound Systems',
   description: 'Your one-stop shop for high-quality sound systems.',
 };
 

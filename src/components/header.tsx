@@ -12,7 +12,7 @@ export default function Header() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
             <Gem className="h-7 w-7 text-primary" />
-            <span className="font-bold text-xl font-headline">TechSphere</span>
+            <span className="font-bold text-xl font-headline">NAURA ELECTRONIC</span>
           </Link>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-destructive font-semibold text-sm">

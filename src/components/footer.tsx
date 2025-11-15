@@ -3,7 +3,7 @@ export default function Footer() {
     <footer className="border-t">
       <div className="container mx-auto px-4 py-6">
         <p className="text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} TechSphere. All Rights Reserved.
+          &copy; {new Date().getFullYear()} NAURA ELECTRONIC. All Rights Reserved.
         </p>
       </div>
     </footer>
