@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Category, Product } from '@/lib/types';
 import { categories, products, brands } from '@/lib/data';
 import Header from '@/components/header';
@@ -26,9 +26,12 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
 
-  const plugin = useRef(
-    Autoplay({ delay: 10000, stopOnInteraction: true })
-  );
+  const plugin = useRef<any>(null);
+
+  useEffect(() => {
+    plugin.current = Autoplay({ delay: 10000, stopOnInteraction: true });
+  }, []);
+
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
@@ -73,10 +76,10 @@ export default function Home() {
         {/* Hero Section */}
         <section className="mb-12">
             <Carousel
-                plugins={[plugin.current]}
+                plugins={plugin.current ? [plugin.current] : []}
                 className="w-full"
-                onMouseEnter={plugin.current.stop}
-                onMouseLeave={plugin.current.reset}
+                onMouseEnter={() => plugin.current?.stop()}
+                onMouseLeave={() => plugin.current?.reset()}
                 opts={{
                     loop: true,
                 }}
