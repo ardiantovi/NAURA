@@ -8,8 +8,6 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCart } from '@/hooks/use-cart';
-import { useToast } from '@/hooks/use-toast';
 import {
   Carousel,
   CarouselContent,
@@ -17,9 +15,9 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Minus, Plus, ShoppingCart, CheckCircle } from 'lucide-react';
+import { Minus, Plus, MessageCircle } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function ProductDetailPage() {
@@ -28,8 +26,7 @@ export default function ProductDetailPage() {
   const product = products.find((p) => p.id === id);
 
   const [quantity, setQuantity] = useState(1);
-  const { addItem } = useCart();
-  const { toast } = useToast();
+  const phoneNumber = "6281234567890"; // Ganti dengan nomor WhatsApp Anda
 
   if (!product) {
     return (
@@ -43,17 +40,11 @@ export default function ProductDetailPage() {
     );
   }
 
-  const handleAddToCart = () => {
-    addItem(product, quantity);
-    toast({
-      title: (
-        <div className="flex items-center">
-          <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-          <span>Added to cart!</span>
-        </div>
-      ),
-      description: `${quantity} x ${product.name} has been added to your cart.`,
-    });
+  const handleBuyOnWhatsApp = () => {
+    const message = encodeURIComponent(
+      `Hello, I'm interested in buying ${quantity}x ${product.name}.`
+    );
+    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
   };
 
   const getImageUrl = (imageId: string) => {
@@ -138,9 +129,9 @@ export default function ProductDetailPage() {
                 </div>
               </div>
 
-              <Button size="lg" className="w-full" onClick={handleAddToCart}>
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                Add to Cart
+              <Button size="lg" className="w-full" onClick={handleBuyOnWhatsApp}>
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Buy on WhatsApp
               </Button>
             </div>
           </div>

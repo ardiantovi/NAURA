@@ -4,6 +4,7 @@ import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { MessageCircle } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +13,14 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const imageUrl = PlaceHolderImages.find((img) => img.id === product.images[0])?.imageUrl || `https://picsum.photos/seed/${product.id}/600/400`;
   const imageHint = PlaceHolderImages.find((img) => img.id === product.images[0])?.imageHint || 'tech product';
+
+  const phoneNumber = "6281234567890"; // Ganti dengan nomor WhatsApp Anda
+  const handleBuyOnWhatsApp = () => {
+    const message = encodeURIComponent(
+      `Hello, I'm interested in buying 1x ${product.name}.`
+    );
+    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+  };
 
   return (
     <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
@@ -35,9 +44,13 @@ export default function ProductCard({ product }: ProductCardProps) {
         </CardTitle>
         <p className="text-xl font-semibold text-primary">${product.price.toFixed(2)}</p>
       </CardContent>
-      <CardFooter>
-        <Button asChild className="w-full" variant="outline">
+      <CardFooter className="flex flex-col items-stretch gap-2">
+         <Button asChild className="w-full" variant="outline">
           <Link href={`/products/${product.id}`}>View Details</Link>
+        </Button>
+        <Button className="w-full" onClick={handleBuyOnWhatsApp}>
+            <MessageCircle className="mr-2 h-5 w-5"/>
+            Buy on WhatsApp
         </Button>
       </CardFooter>
     </Card>

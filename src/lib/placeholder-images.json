@@ -1,100 +1,64 @@
 {
   "placeholderImages": [
     {
-      "id": "laptop-1",
-      "description": "Sleek silver laptop open on a desk.",
-      "imageUrl": "https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxsYXB0b3AlMjBkZXNrfGVufDB8fHx8MTc2MzIxOTg5NXww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "laptop desk"
+      "id": "speaker-1",
+      "description": "A professional black stage speaker.",
+      "imageUrl": "https://images.unsplash.com/photo-1762968280286-0bfcc4afd0ea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8c3RhZ2UlMjBzcGVha2VyfGVufDB8fHx8MTc2MzIyMDEwM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "stage speaker"
     },
     {
-      "id": "laptop-2",
-      "description": "Another view of the sleek silver laptop.",
-      "imageUrl": "https://images.unsplash.com/photo-1686578382607-29aa3babcd21?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bGFwdG9wJTIwYW5nbGV8ZW58MHx8fHwxNzYzMjE5ODk1fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "laptop angle"
+      "id": "speaker-2",
+      "description": "Side view of the professional black stage speaker.",
+      "imageUrl": "https://images.unsplash.com/photo-1698884293353-6772a02d1005?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzcGVha2VyJTIwc2lkZXxlbnwwfHx8fDE3NjMyMjAxMDN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "speaker side"
     },
     {
-      "id": "phone-1",
-      "description": "Modern smartphone displaying a colorful screen.",
-      "imageUrl": "https://images.unsplash.com/photo-1653589048352-7c3b90241ae2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxzbWFydHBob25lJTIwc2NyZWVufGVufDB8fHx8MTc2MzEyNzU1OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "smartphone screen"
+      "id": "amplifier-1",
+      "description": "A powerful audio amplifier with multiple knobs.",
+      "imageUrl": "https://images.unsplash.com/photo-1673855082466-64ec19586c5c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxhdWRpbyUyMGFtcGxpZmllcnxlbnwwfHx8fDE3NjMxMDM0MDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "audio amplifier"
     },
     {
-      "id": "phone-2",
-      "description": "Back view of the modern smartphone.",
-      "imageUrl": "https://images.unsplash.com/photo-1663042092427-fde6ca201ed0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzbWFydHBob25lJTIwYmFja3xlbnwwfHx8fDE3NjMxNTQ1Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "smartphone back"
+      "id": "microphone-1",
+      "description": "A dynamic microphone on a stand.",
+      "imageUrl": "https://images.unsplash.com/photo-1720749252258-3c4002253c96?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtaWNyb3Bob25lJTIwc3RhbmR8ZW58MHx8fHwxNzYzMjIwMTAzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "microphone stand"
     },
     {
-      "id": "headphones-1",
-      "description": "Wireless over-ear headphones on a stand.",
-      "imageUrl": "https://images.unsplash.com/photo-1561549054-005def849184?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxoZWFkcGhvbmVzJTIwc3RhbmR8ZW58MHx8fHwxNzYzMTQ3NjM0fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "headphones stand"
+      "id": "subwoofer-1",
+      "description": "A large 18-inch subwoofer.",
+      "imageUrl": "https://picsum.photos/seed/sub1/600/400",
+      "imageHint": "large subwoofer"
     },
     {
-      "id": "headphones-2",
-      "description": "Close-up of the headphone ear cup.",
-      "imageUrl": "https://images.unsplash.com/photo-1758524571539-b06f0366f50e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8aGVhZHBob25lcyUyMGNsb3NldXB8ZW58MHx8fHwxNzYzMjE5ODk1fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "headphones closeup"
+      "id": "mixer-1",
+      "description": "A 12-channel audio mixing console.",
+      "imageUrl": "https://images.unsplash.com/photo-1651838644528-cdc671c31395?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxhdWRpbyUyMG1peGVyfGVufDB8fHx8MTc2MzIyMDEwM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "audio mixer"
     },
     {
-      "id": "smartwatch-1",
-      "description": "A smartwatch with a black band showing a watch face.",
-      "imageUrl": "https://images.unsplash.com/photo-1760520338238-4137dd2dc28f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxzbWFydHdhdGNoJTIwZmFjZXxlbnwwfHx8fDE3NjMxMzU0NzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "smartwatch face"
-    },
-    {
-      "id": "smartwatch-2",
-      "description": "Side view of the smartwatch.",
-      "imageUrl": "https://images.unsplash.com/photo-1722152845711-be94a0751c8c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxzbWFydHdhdGNoJTIwc2lkZXxlbnwwfHx8fDE3NjMyMTk4OTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "smartwatch side"
-    },
-    {
-      "id": "camera-1",
-      "description": "A professional DSLR camera.",
-      "imageUrl": "https://images.unsplash.com/photo-1606986601547-a4d886b671b2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxkc2xyJTIwY2FtZXJhfGVufDB8fHx8MTc2MzE0NjQ0N3ww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "dslr camera"
-    },
-    {
-      "id": "camera-2",
-      "description": "Lens of the professional DSLR camera.",
-      "imageUrl": "https://images.unsplash.com/photo-1582994254571-52c62d96ebab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjYW1lcmElMjBsZW5zfGVufDB8fHx8MTc2MzE2MDM3NHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "camera lens"
-    },
-    {
-      "id": "tablet-1",
-      "description": "A thin tablet computer with a stylus.",
-      "imageUrl": "https://images.unsplash.com/photo-1750055129957-6e757ce881dc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHx0YWJsZXQlMjBzdHlsdXN8ZW58MHx8fHwxNzYzMTM1NDczfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "tablet stylus"
-    },
-    {
-      "id": "drone-1",
-      "description": "A white quadcopter drone.",
-      "imageUrl": "https://images.unsplash.com/photo-1610270284067-e779b1ad7aac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxkcm9uZSUyMGZseWluZ3xlbnwwfHx8fDE3NjMxMzg0MjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "drone flying"
-    },
-    {
-      "id": "vr-1",
-      "description": "A virtual reality headset.",
-      "imageUrl": "https://images.unsplash.com/photo-1576633587382-13ddf37b1fc1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx2ciUyMGhlYWRzZXR8ZW58MHx8fHwxNzYzMTU5MTM4fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "vr headset"
+      "id": "soundbar-1",
+      "description": "A sleek soundbar for home theater.",
+      "imageUrl": "https://images.unsplash.com/photo-1688853204774-4ab3a47db0d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxob21lJTIwc291bmRiYXJ8ZW58MHx8fHwxNzYzMjIwMTAzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "home soundbar"
     },
     {
       "id": "reco-1",
       "description": "Recommendation 1",
-      "imageUrl": "https://images.unsplash.com/photo-1690455422058-156a39f18a0a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx0ZWNoJTIwcHJvZHVjdHxlbnwwfHx8fDE3NjMyMTk4OTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "tech product"
+      "imageUrl": "https://images.unsplash.com/photo-1520444451380-ebe0f7b9cfd5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxzb3VuZCUyMHN5c3RlbXxlbnwwfHx8fDE3NjMyMjAxMDN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sound system"
     },
     {
       "id": "reco-2",
       "description": "Recommendation 2",
-      "imageUrl": "https://images.unsplash.com/photo-1746792651809-1dff8a04b206?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxnYWRnZXQlMjBkZXNrfGVufDB8fHx8MTc2MzIxOTg5NXww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "gadget desk"
+      "imageUrl": "https://images.unsplash.com/photo-1745848413083-cfea604edb6a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8YXVkaW8lMjBlcXVpcG1lbnR8ZW58MHx8fHwxNzYzMjIwMTAzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "audio equipment"
     },
     {
       "id": "reco-3",
       "description": "Recommendation 3",
-      "imageUrl": "https://images.unsplash.com/photo-1496878632226-93afc36151ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxlbGVjdHJvbmljJTIwZGV2aWNlfGVufDB8fHx8MTc2MzIxOTg5NXww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "electronic device"
+      "imageUrl": "https://images.unsplash.com/photo-1723778094550-a964e7b84a41?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxwcm8lMjBhdWRpb3xlbnwwfHx8fDE3NjMyMjAxMDN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pro audio"
     }
   ]
 }

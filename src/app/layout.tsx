@@ -1,12 +1,11 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { CartProvider } from '@/hooks/use-cart';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'TechSphere - Modern Electronics Store',
-  description: 'An elegant, modern online store for the latest in tech.',
+  title: 'TechSphere - Professional Sound Systems',
+  description: 'Your one-stop shop for high-quality sound systems.',
 };
 
 export default function RootLayout({
@@ -25,10 +24,8 @@ export default function RootLayout({
         />
       </head>
       <body className={cn('font-body antialiased min-h-screen flex flex-col')}>
-        <CartProvider>
-          {children}
-          <Toaster />
-        </CartProvider>
+        {children}
+        <Toaster />
       </body>
     </html>
   );

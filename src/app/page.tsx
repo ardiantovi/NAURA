@@ -33,10 +33,10 @@ export default function Home() {
         {/* Hero Section */}
         <section className="text-center bg-card p-8 md:p-16 rounded-xl mb-12 shadow-md">
           <h1 className="text-4xl md:text-6xl font-bold font-headline text-primary mb-4 tracking-tight">
-            Welcome to TechSphere
+            Welcome to TechSphere Audio
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Discover the future of technology. High-quality electronics for a connected life.
+            High-quality sound systems for professionals and enthusiasts.
           </p>
         </section>
 
