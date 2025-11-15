@@ -39,14 +39,6 @@ const formSchema = z.object({
   price: z.coerce.number().positive('Price must be positive'),
   brand: z.string().min(1, 'Brand is required'),
   images: z.string().transform(val => val.split(',').map(s => s.trim()).filter(Boolean)),
-  specs: z.string().transform(val => {
-    try {
-        if (!val) return {};
-        return JSON.parse(val);
-    } catch {
-        return {};
-    }
-  }),
 });
 
 type ProductFormValues = z.infer<typeof formSchema>;
@@ -65,7 +57,6 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
     price: product?.price || 0,
     brand: product?.brand || '',
     images: product?.images?.join(', ') || '',
-    specs: product?.specs ? JSON.stringify(product.specs, null, 2) : '',
   };
   
   const form = useForm<ProductFormValues>({
@@ -83,7 +74,6 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
         price: 0,
         brand: '',
         images: '',
-        specs: '',
       });
     }
   }, [product, isOpen, form]);
@@ -175,19 +165,6 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
                   <FormLabel>Image IDs</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="e.g. speaker-1, speaker-2" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="specs"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Specifications (JSON)</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} rows={5} placeholder='e.g. { "Power": "100W", "Color": "Black" }' />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
