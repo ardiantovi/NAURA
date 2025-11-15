@@ -1,0 +1,96 @@
+/**
+ * @fileoverview Firestore Security Rules for TechSphere Admin Panel
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict admin-only access model for managing products and banners.
+ * Only authenticated users with a corresponding document in the `/roles_admin` collection
+ * are granted read and write access. This ensures that only authorized personnel can
+ * modify product listings or banner configurations.
+ *
+ * Data Structure:
+ * The data is organized into two top-level collections: `/products` and `/banners`.
+ * - `/products/{productId}` stores information about individual products.
+ * - `/banners/{bannerId}` stores information about website banners.
+ * Administrative roles are managed in the `/roles_admin/{userId}` collection. The existence
+ * of a document in this collection indicates that the user is an administrator.
+ *
+ * Key Security Decisions:
+ * - **Admin-Only Access:** All data modification operations are restricted to administrators.
+ * - **No Public Access:** No public read or write access is granted to any collection.
+ * - **Existence-Based Roles:** Admin privileges are determined by the presence of a document
+ *   with the user's ID in the `/roles_admin` collection. This approach simplifies rule logic
+ *   and avoids the need to store role data within the document itself.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Checks if the user is signed in.
+     * @return {bool} True if the user is signed in, false otherwise.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the user is an admin by verifying the existence of a document in the /roles_admin collection.
+     * @return {bool} True if the user is an admin, false otherwise.
+     */
+    function isAdmin() {
+      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /**
+     * @description Security rules for the /products collection.
+     * @path /products/{productId}
+     * @allow (create, update, delete) An admin user can create, update, and delete product documents.
+     * @deny (create, update, delete) A non-admin user cannot create, update, or delete product documents.
+     * @allow (get, list) An admin user can read product documents.
+     * @deny (get, list) A non-admin user cannot read product documents.
+     * @principle Enforces admin-only access for product management.
+     */
+    match /products/{productId} {
+      allow get: if isSignedIn() && isAdmin();
+      allow list: if isSignedIn() && isAdmin();
+      allow create: if isSignedIn() && isAdmin();
+      allow update: if isSignedIn() && isAdmin();
+      allow delete: if isSignedIn() && isAdmin();
+    }
+
+    /**
+     * @description Security rules for the /banners collection.
+     * @path /banners/{bannerId}
+     * @allow (create, update, delete) An admin user can create, update, and delete banner documents.
+     * @deny (create, update, delete) A non-admin user cannot create, update, or delete banner documents.
+     * @allow (get, list) An admin user can read banner documents.
+     * @deny (get, list) A non-admin user cannot read banner documents.
+     * @principle Enforces admin-only access for banner management.
+     */
+    match /banners/{bannerId} {
+      allow get: if isSignedIn() && isAdmin();
+      allow list: if isSignedIn() && isAdmin();
+      allow create: if isSignedIn() && isAdmin();
+      allow update: if isSignedIn() && isAdmin();
+      allow delete: if isSignedIn() && isAdmin();
+    }
+
+        /**
+     * @description Security rules for the /roles_admin collection.
+     * @path /roles_admin/{userId}
+     * @allow create: if isSignedIn() && isAdmin();
+     * @allow update: if isSignedIn() && isAdmin();
+     * @allow delete: if isSignedIn() && isAdmin();
+     * @allow get: if isSignedIn() && isAdmin();
+     * @allow list: if isSignedIn() && isAdmin();
+     * @principle Enforces admin-only access for role management. Only other admins can change admin role assignments.
+     */
+    match /roles_admin/{userId} {
+          allow get: if isSignedIn() && isAdmin();
+          allow list: if isSignedIn() && isAdmin();
+          allow create: if isSignedIn() && isAdmin();
+          allow update: if isSignedIn() && isAdmin();
+          allow delete: if isSignedIn() && isAdmin();
+    }
+  }
+}

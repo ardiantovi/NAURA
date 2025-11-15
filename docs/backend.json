@@ -1,0 +1,158 @@
+{
+  "entities": {
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a product sold in the TechSphere online store.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the product."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the product."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the product's image.",
+          "format": "uri"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category that the product belongs to."
+        },
+        "stockQuantity": {
+          "type": "number",
+          "description": "The number of items currently in stock."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "price",
+        "imageUrl",
+        "category",
+        "stockQuantity"
+      ]
+    },
+    "Banner": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Banner",
+      "type": "object",
+      "description": "Represents a banner displayed on the TechSphere website.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Banner entity."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the banner image.",
+          "format": "uri"
+        },
+        "altText": {
+          "type": "string",
+          "description": "Alternative text for the banner image (for accessibility)."
+        },
+        "linkUrl": {
+          "type": "string",
+          "description": "URL that the banner links to.",
+          "format": "uri"
+        },
+        "startDate": {
+          "type": "string",
+          "description": "The starting date when banner will be visible",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "The ending date when banner will no longer be visible",
+          "format": "date-time"
+        },
+        "priority": {
+          "type": "number",
+          "description": "The order in which banners are displayed, higher number is given priority"
+        }
+      },
+      "required": [
+        "id",
+        "imageUrl",
+        "altText",
+        "linkUrl",
+        "startDate",
+        "endDate",
+        "priority"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores product information.  Accessible and modifiable by admins only.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "Unique identifier for the product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/banners/{bannerId}",
+        "definition": {
+          "entityName": "Banner",
+          "schema": {
+            "$ref": "#/backend/entities/Banner"
+          },
+          "description": "Stores banner information for the website's slideshow. Accessible and modifiable by admins only.",
+          "params": [
+            {
+              "name": "bannerId",
+              "description": "Unique identifier for the banner."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{userId}",
+        "definition": {
+          "entityName": "AdminRole",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Indicates administrator privileges. The existence of a document with a user's ID in this collection grants admin access. No data is stored inside document. Accessible and modifiable by admins only.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user, acting as their ID."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore data structure is designed to support the TechSphere online store, focusing on managing products and banners via an admin panel. The structure is optimized for security, scalability, and ease of debugging, adhering to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and Rules are not Filters (QAPs).  Since only admin functionality is explicitly required, a simple, flat structure is sufficient.\n\n**Authorization Independence:** No hierarchical authorization dependencies are needed, as all data management is assumed to be performed by administrators.\n\n**Structural Segregation:** Products and banners are stored in separate collections to maintain a homogeneous security posture. This allows for distinct security rules for each entity type if needed in the future.\n\n**Access Modeling:**  Administrative access is granted via a dedicated `/roles_admin/{uid}` collection, using existence over content. This allows rules to easily verify if the requesting user is an admin by checking for the existence of a document with their UID in the `/roles_admin` collection.  Since only admin functionality has been explicitly requested, this solution is appropriate.  If user-specific data or collaborative features were to be implemented, a different structure (such as path-based ownership or membership maps) would be required.\n\n**QAPs:** List operations are secured by verifying admin status via the `/roles_admin/{uid}` collection. The rules only allow listing/reading if the user is an admin and doesn't need to filter data based on user roles.\n\n**Invariants:** Firestore rules can enforce data integrity constraints, like valid image URLs and price ranges, during creation and updates."
+  }
+}
