@@ -24,8 +24,8 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-      <CardHeader>
-        <Link href={`/products/${product.id}`} className="block">
+      <CardHeader className="p-4">
+        <Link href={`/products/${product.id}`} className="block group">
           <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-lg">
             <Image
               src={imageUrl}
@@ -38,13 +38,13 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         </Link>
       </CardHeader>
-      <CardContent className="flex-grow">
+      <CardContent className="flex-grow p-4">
         <CardTitle className="text-lg font-headline font-medium mb-2 leading-tight h-10 overflow-hidden">
           <Link href={`/products/${product.id}`}>{product.name}</Link>
         </CardTitle>
         <p className="text-xl font-semibold text-primary">${product.price.toFixed(2)}</p>
       </CardContent>
-      <CardFooter className="flex flex-col items-stretch gap-2">
+      <CardFooter className="flex flex-col items-stretch gap-2 p-4">
          <Button asChild className="w-full" variant="outline">
           <Link href={`/products/${product.id}`}>View Details</Link>
         </Button>

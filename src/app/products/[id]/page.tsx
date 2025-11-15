@@ -62,7 +62,7 @@ export default function ProductDetailPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8">
         <Card className="overflow-hidden">
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-4 md:gap-8">
             {/* Image Carousel */}
             <div className="p-4">
               <Carousel className="w-full">
@@ -92,17 +92,17 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Product Info */}
-            <div className="p-8 flex flex-col">
+            <div className="p-4 md:p-8 flex flex-col">
               <p className="text-sm font-semibold text-primary mb-1">{product.brand}</p>
-              <h1 className="text-3xl lg:text-4xl font-bold font-headline mb-2">{product.name}</h1>
-              <p className="text-muted-foreground text-lg mb-4">{product.category}</p>
-              <p className="text-4xl font-bold text-primary mb-6">${product.price.toFixed(2)}</p>
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold font-headline mb-2">{product.name}</h1>
+              <p className="text-muted-foreground text-base md:text-lg mb-4">{product.category}</p>
+              <p className="text-3xl md:text-4xl font-bold text-primary mb-6">${product.price.toFixed(2)}</p>
 
               <p className="text-foreground/80 leading-relaxed mb-6 flex-grow">{product.description}</p>
               
               <Separator className="my-6" />
 
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
                 <p className="font-semibold">Quantity:</p>
                 <div className="flex items-center gap-2">
                   <Button
@@ -138,15 +138,15 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Specifications */}
-          <div className="p-8">
+          <div className="p-4 md:p-8">
             <h2 className="text-2xl font-bold font-headline mb-4">Specifications</h2>
             <Card>
               <CardContent className="p-0">
                 <ul className="divide-y">
                   {Object.entries(product.specs).map(([key, value]) => (
-                    <li key={key} className="flex justify-between items-center p-4">
+                    <li key={key} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4">
                       <span className="font-medium text-muted-foreground">{key}</span>
-                      <span className="font-semibold text-right">{value}</span>
+                      <span className="font-semibold text-left sm:text-right">{value}</span>
                     </li>
                   ))}
                 </ul>
