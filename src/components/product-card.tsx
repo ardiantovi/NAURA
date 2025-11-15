@@ -45,9 +45,6 @@ export default function ProductCard({ product }: ProductCardProps) {
         <p className="text-xl font-semibold text-primary">${product.price.toFixed(2)}</p>
       </CardContent>
       <CardFooter className="flex flex-col items-stretch gap-2 p-4">
-         <Button asChild className="w-full" variant="outline">
-          <Link href={`/products/${product.id}`}>View Details</Link>
-        </Button>
         <Button className="w-full" onClick={handleBuyOnWhatsApp}>
             <MessageCircle className="mr-2 h-5 w-5"/>
             Buy on WhatsApp
