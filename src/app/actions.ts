@@ -2,10 +2,10 @@
 
 import { personalizedProductRecommendations, PersonalizedProductRecommendationsOutput } from "@/ai/flows/personalized-product-recommendations";
 import { collection, getDocs, limit, query } from "firebase/firestore";
-import { getSdks } from "@/firebase";
+import { getAdminSdks } from "@/firebase/admin";
 
 export async function getRecommendationsAction(): Promise<PersonalizedProductRecommendationsOutput> {
-  const { firestore } = getSdks(null as any); // We need a way to get firestore instance on server
+  const { firestore } = getAdminSdks();
   
   // In a real app, you'd get user-specific history.
   // Here we simulate it by taking a few products from the DB.
