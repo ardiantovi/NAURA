@@ -15,7 +15,6 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { MessageCircle } from 'lucide-react';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { Product } from '@/lib/types';
@@ -81,14 +80,9 @@ export default function ProductDetailPage() {
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
   };
 
-  const getImageUrl = (imageId: string) => {
-    const image = PlaceHolderImages.find((img) => img.id === imageId);
-    return image ? image.imageUrl : `https://picsum.photos/seed/${imageId}/800/600`;
-  };
-  
-  const getImageHint = (imageId: string) => {
-    const image = PlaceHolderImages.find((img) => img.id === imageId);
-    return image ? image.imageHint : 'tech product';
+  const getImageUrl = (imageUrl: string) => {
+    if (!imageUrl) return 'https://placehold.co/800x600/f3f4f6/333?text=?';
+    return imageUrl.startsWith('http') ? imageUrl : `https://picsum.photos/seed/${imageUrl}/800/600`;
   };
 
   return (
@@ -101,16 +95,16 @@ export default function ProductDetailPage() {
             <div className="p-4">
               <Carousel className="w-full">
                 <CarouselContent>
-                  {product.images && product.images.length > 0 ? product.images.map((imgId, index) => (
+                  {product.images && product.images.length > 0 ? product.images.map((imgUrl, index) => (
                     <CarouselItem key={index}>
                       <div className="aspect-w-4 aspect-h-3 overflow-hidden rounded-lg">
                         <Image
-                          src={getImageUrl(imgId)}
+                          src={getImageUrl(imgUrl)}
                           alt={`${product.name} image ${index + 1}`}
                           width={800}
                           height={600}
                           className="w-full h-full object-cover"
-                          data-ai-hint={getImageHint(imgId)}
+                          data-ai-hint="tech product"
                         />
                       </div>
                     </CarouselItem>

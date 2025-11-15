@@ -34,7 +34,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { BannerForm } from './banner-form';
 import { Skeleton } from '../ui/skeleton';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 // Simple Banner type for this component
 interface Banner {
@@ -107,9 +106,9 @@ export default function BannerManager() {
     setIsFormOpen(false);
   };
 
-  const getImageUrl = (imageId: string) => {
-    const image = PlaceHolderImages.find((img) => img.id === imageId);
-    return image ? image.imageUrl : imageId.startsWith('http') ? imageId : `https://picsum.photos/seed/${imageId}/80/40`;
+  const getImageUrl = (imageUrl: string) => {
+    if (!imageUrl) return 'https://placehold.co/80x40/f3f4f6/333?text=?';
+    return imageUrl.startsWith('http') ? imageUrl : `https://picsum.photos/seed/${imageUrl}/80/40`;
   };
 
   return (

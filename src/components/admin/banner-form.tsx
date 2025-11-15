@@ -32,7 +32,7 @@ interface Banner {
 }
 
 const formSchema = z.object({
-  imageUrl: z.string().min(1, 'Image URL or ID is required'),
+  imageUrl: z.string().url('Must be a valid URL'),
   altText: z.string().min(1, 'Alt text is required'),
   linkUrl: z.string().url('Must be a valid URL'),
 });
@@ -80,9 +80,9 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
               name="imageUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image URL or ID</FormLabel>
+                  <FormLabel>Image URL</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="https://... or speaker-1"/>
+                    <Input {...field} placeholder="https://example.com/image.png"/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

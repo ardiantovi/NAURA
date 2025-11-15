@@ -3,7 +3,6 @@ import Image from 'next/image';
 import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { MessageCircle } from 'lucide-react';
 
 interface ProductCardProps {
@@ -11,8 +10,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const imageUrl = PlaceHolderImages.find((img) => img.id === product.images[0])?.imageUrl || `https://picsum.photos/seed/${product.id}/600/400`;
-  const imageHint = PlaceHolderImages.find((img) => img.id === product.images[0])?.imageHint || 'tech product';
+  const imageUrl = product.images?.[0] || `https://picsum.photos/seed/${product.id}/600/400`;
 
   const phoneNumber = "6285183280606"; // Ganti dengan nomor WhatsApp Anda
   const handleBuyOnWhatsApp = () => {
@@ -33,7 +31,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               width={600}
               height={400}
               className="object-cover w-full h-full transform transition-transform duration-300 group-hover:scale-105"
-              data-ai-hint={imageHint}
+              data-ai-hint="tech product"
             />
           </div>
         </Link>

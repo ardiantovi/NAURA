@@ -35,7 +35,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ProductForm } from './product-form';
 import { Skeleton } from '../ui/skeleton';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function ProductManager() {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -96,10 +95,9 @@ export default function ProductManager() {
     setIsFormOpen(false);
   };
   
-  const getImageUrl = (imageId: string) => {
-    if (!imageId) return 'https://placehold.co/40x40/f3f4f6/333?text=?';
-    const image = PlaceHolderImages.find((img) => img.id === imageId);
-    return image ? image.imageUrl : `https://picsum.photos/seed/${imageId}/40/40`;
+  const getImageUrl = (imageUrl: string) => {
+    if (!imageUrl) return 'https://placehold.co/40x40/f3f4f6/333?text=?';
+    return imageUrl.startsWith('http') ? imageUrl : `https://picsum.photos/seed/${imageUrl}/40/40`;
   };
 
   return (

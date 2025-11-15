@@ -162,9 +162,9 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
               name="images"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image IDs (pisahkan dengan koma)</FormLabel>
+                  <FormLabel>Image URLs (comma-separated)</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Contoh: speaker-1, speaker-2" />
+                    <Input {...field} placeholder="https://..., https://..." />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
