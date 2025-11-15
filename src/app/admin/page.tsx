@@ -2,12 +2,14 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase'; // Using the custom hook
+import { useUser } from '@/firebase';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getAuth, signOut } from 'firebase/auth';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ProductManager from '@/components/admin/product-manager';
+import BannerManager from '@/components/admin/banner-manager';
 
 export default function AdminPage() {
   const { user, isUserLoading } = useUser();
@@ -26,33 +28,40 @@ export default function AdminPage() {
     });
   };
 
-
   if (isUserLoading || !user) {
     return (
-        <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow container mx-auto px-4 py-8 text-center">
-                <p>Loading...</p>
-            </main>
-            <Footer />
-        </div>
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-8 text-center">
+          <p>Loading...</p>
+        </main>
+        <Footer />
+      </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-muted/40">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Admin Panel</CardTitle>
-            <Button onClick={handleLogout} variant="outline">Logout</Button>
-          </CardHeader>
-          <CardContent>
-            <p>Welcome, {user.email}! This is where you'll manage products and banners.</p>
-            {/* TODO: Add product and banner management UI */}
-          </CardContent>
-        </Card>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold font-headline">Admin Panel</h1>
+          <Button onClick={handleLogout} variant="outline">
+            Logout
+          </Button>
+        </div>
+        <Tabs defaultValue="products">
+          <TabsList className="grid w-full grid-cols-2 max-w-md mb-6">
+            <TabsTrigger value="products">Manage Products</TabsTrigger>
+            <TabsTrigger value="banners">Manage Banners</TabsTrigger>
+          </TabsList>
+          <TabsContent value="products">
+            <ProductManager />
+          </TabsContent>
+          <TabsContent value="banners">
+            <BannerManager />
+          </TabsContent>
+        </Tabs>
       </main>
       <Footer />
     </div>
