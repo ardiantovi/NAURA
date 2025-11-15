@@ -26,7 +26,7 @@ export default function ProductDetailPage() {
   const product = products.find((p) => p.id === id);
 
   const [quantity, setQuantity] = useState(1);
-  const phoneNumber = "6281234567890"; // Ganti dengan nomor WhatsApp Anda
+  const phoneNumber = "6285183280606"; // Ganti dengan nomor WhatsApp Anda
 
   if (!product) {
     return (

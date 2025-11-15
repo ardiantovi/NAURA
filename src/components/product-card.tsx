@@ -14,7 +14,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const imageUrl = PlaceHolderImages.find((img) => img.id === product.images[0])?.imageUrl || `https://picsum.photos/seed/${product.id}/600/400`;
   const imageHint = PlaceHolderImages.find((img) => img.id === product.images[0])?.imageHint || 'tech product';
 
-  const phoneNumber = "6281234567890"; // Ganti dengan nomor WhatsApp Anda
+  const phoneNumber = "6285183280606"; // Ganti dengan nomor WhatsApp Anda
   const handleBuyOnWhatsApp = () => {
     const message = encodeURIComponent(
       `Hello, I'm interested in buying 1x ${product.name}.`
