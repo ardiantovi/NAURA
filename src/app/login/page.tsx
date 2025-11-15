@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser, useAuth, useFirestore } from '@/firebase'; // Using custom hooks
-import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { onAuthStateChanged, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, UserCredential } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, UserCredential } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 
 
@@ -40,6 +39,15 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth || !firestore) {
+        setError("Firebase is not initialized.");
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Firebase is not initialized. Please try again later.",
+        });
+        return;
+    }
     setError(null);
     try {
         await signInWithEmailAndPassword(auth, email, password);
@@ -51,7 +59,7 @@ export default function LoginPage() {
             try {
                 const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const newUser = userCredential.user;
-                // After creating the user, grant them the admin role
+                // After creating the user, grant them the admin role and WAIT for it to complete.
                 await grantAdminRole(newUser.uid);
                 toast({ title: "Admin account created and logged in!" });
                 router.push('/admin');
@@ -77,7 +85,15 @@ export default function LoginPage() {
   };
   
   if (isUserLoading) {
-      return <p>Loading...</p>
+      return (
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-grow flex items-center justify-center">
+            <p>Loading...</p>
+          </main>
+          <Footer />
+        </div>
+      )
   }
   
   if(user) {
