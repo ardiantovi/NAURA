@@ -39,7 +39,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </Link>
       </CardHeader>
       <CardContent className="flex-grow">
-        <CardTitle className="text-lg font-headline font-medium mb-2 leading-tight h-14">
+        <CardTitle className="text-lg font-headline font-medium mb-2 leading-tight h-10 overflow-hidden">
           <Link href={`/products/${product.id}`}>{product.name}</Link>
         </CardTitle>
         <p className="text-xl font-semibold text-primary">${product.price.toFixed(2)}</p>
