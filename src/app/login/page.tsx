@@ -15,8 +15,8 @@ import { onAuthStateChanged, getAuth, signInWithEmailAndPassword } from 'firebas
 
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('guekece159@gmail.com');
+  const [password, setPassword] = useState('GUEKECE123');
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { user, isUserLoading } = useUser();
