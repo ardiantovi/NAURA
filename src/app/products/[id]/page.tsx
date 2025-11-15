@@ -25,8 +25,7 @@ export default function ProductDetailPage() {
   const { id } = params;
   const product = products.find((p) => p.id === id);
 
-  const [quantity, setQuantity] = useState(1);
-  const phoneNumber = "6285183280606"; // Ganti dengan nomor WhatsApp Anda
+  const phoneNumber = "6285183280606";
 
   if (!product) {
     return (
@@ -42,7 +41,7 @@ export default function ProductDetailPage() {
 
   const handleBuyOnWhatsApp = () => {
     const message = encodeURIComponent(
-      `Hello, I'm interested in buying ${quantity}x ${product.name}.`
+      `Hello, I'm interested in buying ${product.name}.`
     );
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
   };
@@ -101,34 +100,6 @@ export default function ProductDetailPage() {
               <p className="text-foreground/80 leading-relaxed mb-6 flex-grow">{product.description}</p>
               
               <Separator className="my-6" />
-
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-                <p className="font-semibold">Quantity:</p>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <Input
-                    type="number"
-                    className="h-9 w-16 text-center"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9"
-                    onClick={() => setQuantity(quantity + 1)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
 
               <Button size="lg" className="w-full" onClick={handleBuyOnWhatsApp}>
                 <MessageCircle className="mr-2 h-5 w-5" />
