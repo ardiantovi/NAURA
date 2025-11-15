@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import type { Product } from '@/lib/types';
-import { categories, products, brands } from '@/lib/data';
+import { brands } from '@/lib/data';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import ProductCard from '@/components/product-card';
@@ -11,7 +11,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search, Zap, Annoyed } from 'lucide-react';
 import PersonalizedRecommendations from '@/components/personalized-recommendations';
-import { Separator } from '@/components/ui/separator';
 import {
   Carousel,
   CarouselContent,
@@ -20,6 +19,9 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where, DocumentData } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,16 +33,24 @@ export default function Home() {
     plugin.current = Autoplay({ delay: 10000, stopOnInteraction: true });
   }, []);
 
+  const firestore = useFirestore();
+
+  const productsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'products');
+  }, [firestore]);
+
+  const { data: products, isLoading: isLoadingProducts } = useCollection<Product>(productsQuery);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
   };
 
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = products?.filter((product) => {
     const matchesBrand = selectedBrand ? product.brand === selectedBrand : true;
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesBrand && matchesSearch;
-  });
+  }) || [];
 
   const heroSlides = [
     {
@@ -142,7 +152,19 @@ export default function Home() {
               />
             </div>
 
-            {filteredProducts.length > 0 ? (
+            {isLoadingProducts ? (
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {[...Array(3)].map((_, i) => (
+                    <Card key={i}>
+                        <CardContent className="p-4 space-y-4">
+                        <Skeleton className="h-40 w-full" />
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-6 w-1/2" />
+                        </CardContent>
+                    </Card>
+                    ))}
+              </div>
+            ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />

@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import {
   type PersonalizedProductRecommendationsOutput,
 } from '@/ai/flows/personalized-product-recommendations';
-import { products } from '@/lib/data';
 import {
   Carousel,
   CarouselContent,
@@ -15,10 +14,20 @@ import ProductCard from './product-card';
 import { Skeleton } from './ui/skeleton';
 import { Card, CardContent } from './ui/card';
 import { getRecommendationsAction } from '@/app/actions';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import type { Product } from '@/lib/types';
+import { collection } from 'firebase/firestore';
 
 export default function PersonalizedRecommendations() {
   const [recommendations, setRecommendations] = useState<PersonalizedProductRecommendationsOutput | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const firestore = useFirestore();
+  const productsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'products');
+  }, [firestore]);
+  const { data: products } = useCollection<Product>(productsQuery);
 
   useEffect(() => {
     getRecommendationsAction()
@@ -30,8 +39,12 @@ export default function PersonalizedRecommendations() {
       .finally(() => setIsLoading(false));
   }, []);
 
+  if (!products) {
+    return null; // or a loading state for products
+  }
+
   const recommendedProducts = recommendations?.recommendations.map(rec => {
-    // Find the full product details from our mock data
+    // Find the full product details from our Firestore data
     const product = products.find(p => p.id === rec.productId || p.name === rec.productName);
     return product ? { ...product, reason: rec.reason } : null;
   }).filter(Boolean);

@@ -1,13 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import { products } from '@/lib/data';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Carousel,
   CarouselContent,
@@ -17,15 +14,53 @@ import {
 } from '@/components/ui/carousel';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Minus, Plus, MessageCircle } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import type { Product } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 export default function ProductDetailPage() {
   const params = useParams();
   const { id } = params;
-  const product = products.find((p) => p.id === id);
+  const firestore = useFirestore();
+  
+  const productRef = useMemoFirebase(() => {
+    if (!firestore || !id) return null;
+    return doc(firestore, 'products', id as string);
+  }, [firestore, id]);
+
+  const { data: product, isLoading } = useDoc<Product>(productRef);
 
   const phoneNumber = "6285183280606";
+
+  if (isLoading) {
+    return (
+        <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow container mx-auto px-4 py-8">
+                <Card className="overflow-hidden">
+                    <div className="grid md:grid-cols-2 gap-4 md:gap-8">
+                        <div className="p-4">
+                            <Skeleton className="w-full aspect-video" />
+                        </div>
+                        <div className="p-4 md:p-8 flex flex-col">
+                            <Skeleton className="h-6 w-1/4 mb-2" />
+                            <Skeleton className="h-10 w-3/4 mb-2" />
+                            <Skeleton className="h-6 w-1/3 mb-4" />
+                            <Skeleton className="h-12 w-1/2 mb-6" />
+                            <Skeleton className="h-20 w-full mb-6" />
+                            <Skeleton className="h-12 w-full" />
+                        </div>
+                    </div>
+                </Card>
+            </main>
+            <Footer />
+        </div>
+    )
+  }
 
   if (!product) {
     return (
@@ -66,7 +101,7 @@ export default function ProductDetailPage() {
             <div className="p-4">
               <Carousel className="w-full">
                 <CarouselContent>
-                  {product.images.map((imgId, index) => (
+                  {product.images && product.images.length > 0 ? product.images.map((imgId, index) => (
                     <CarouselItem key={index}>
                       <div className="aspect-w-4 aspect-h-3 overflow-hidden rounded-lg">
                         <Image
@@ -79,12 +114,18 @@ export default function ProductDetailPage() {
                         />
                       </div>
                     </CarouselItem>
-                  ))}
+                  )) : (
+                    <CarouselItem>
+                        <div className="aspect-w-4 aspect-h-3 overflow-hidden rounded-lg bg-muted flex items-center justify-center">
+                            <span className="text-muted-foreground">No Image</span>
+                        </div>
+                    </CarouselItem>
+                  )}
                 </CarouselContent>
-                {product.images.length > 1 && (
+                {product.images && product.images.length > 1 && (
                     <>
-                        <CarouselPrevious className="left-2" />
-                        <CarouselNext className="right-2" />
+                        <CarouselPrevious className="left-2 hidden md:flex" />
+                        <CarouselNext className="right-2 hidden md:flex" />
                     </>
                 )}
               </Carousel>
@@ -109,21 +150,23 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Specifications */}
-          <div className="p-4 md:p-8">
-            <h2 className="text-2xl font-bold font-headline mb-4">Specifications</h2>
-            <Card>
-              <CardContent className="p-0">
-                <ul className="divide-y">
-                  {Object.entries(product.specs).map(([key, value]) => (
-                    <li key={key} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4">
-                      <span className="font-medium text-muted-foreground">{key}</span>
-                      <span className="font-semibold text-left sm:text-right">{value}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
+          {product.specs && (
+            <div className="p-4 md:p-8">
+                <h2 className="text-2xl font-bold font-headline mb-4">Specifications</h2>
+                <Card>
+                <CardContent className="p-0">
+                    <ul className="divide-y">
+                    {Object.entries(product.specs).map(([key, value]) => (
+                        <li key={key} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4">
+                        <span className="font-medium text-muted-foreground">{key}</span>
+                        <span className="font-semibold text-left sm:text-right">{value}</span>
+                        </li>
+                    ))}
+                    </ul>
+                </CardContent>
+                </Card>
+            </div>
+          )}
         </Card>
       </main>
       <Footer />
