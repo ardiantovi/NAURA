@@ -77,21 +77,28 @@ export default function ProductManager() {
 
   const handleFormSubmit = (values: any) => {
      if (!firestore) return;
+     
+     const fullProductData = {
+        ...values,
+        brand: values.brand || 'NAURA',
+        category: values.category || 'Audio',
+     }
 
     if (selectedProduct) {
       // Update existing product
       const docRef = doc(firestore, 'products', selectedProduct.id);
-      updateDocumentNonBlocking(docRef, values);
+      updateDocumentNonBlocking(docRef, fullProductData);
     } else {
       // Add new product
       if (productsCollection) {
-        addDocumentNonBlocking(productsCollection, values);
+        addDocumentNonBlocking(productsCollection, fullProductData);
       }
     }
     setIsFormOpen(false);
   };
   
   const getImageUrl = (imageId: string) => {
+    if (!imageId) return 'https://placehold.co/40x40/f3f4f6/333?text=?';
     const image = PlaceHolderImages.find((img) => img.id === imageId);
     return image ? image.imageUrl : `https://picsum.photos/seed/${imageId}/40/40`;
   };
@@ -114,8 +121,6 @@ export default function ProductManager() {
               <TableRow>
                 <TableHead className="w-[80px]">Image</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Brand</TableHead>
-                <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -127,10 +132,8 @@ export default function ProductManager() {
                 [...Array(3)].map((_, i) => (
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-10 w-10" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-48" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-16" /></TableCell>
                     <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                   </TableRow>
                 ))}
@@ -146,8 +149,6 @@ export default function ProductManager() {
                     />
                   </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.brand}</TableCell>
-                  <TableCell>{product.category}</TableCell>
                   <TableCell>${product.price.toFixed(2)}</TableCell>
                   <TableCell>
                     <DropdownMenu>

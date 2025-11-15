@@ -29,8 +29,6 @@ const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   price: z.coerce.number().positive('Price must be positive'),
-  brand: z.string().min(1, 'Brand is required'),
-  category: z.string().min(1, 'Category is required'),
   images: z.string().transform(val => val.split(',').map(s => s.trim()).filter(Boolean)),
   specs: z.string().transform(val => {
     try {
@@ -56,8 +54,6 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
     name: product?.name || '',
     description: product?.description || '',
     price: product?.price || 0,
-    brand: product?.brand || '',
-    category: product?.category || '',
     images: product?.images?.join(', ') || '',
     specs: product?.specs ? JSON.stringify(product.specs, null, 2) : '',
   };
@@ -75,8 +71,6 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
         name: '',
         description: '',
         price: 0,
-        brand: '',
-        category: '',
         images: '',
         specs: '',
       });
@@ -119,32 +113,6 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
                     <FormLabel>Price</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="brand"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Brand</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
