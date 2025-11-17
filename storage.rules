@@ -3,14 +3,13 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow anyone to read any file. This is necessary for your app to
-    // display product and banner images to all users.
+    // Allow read access to everyone to display images publicly.
     match /{allPaths=**} {
       allow read;
     }
 
-    // Allow authenticated users (admins) to write to any file.
-    // This allows creating, updating, and deleting images.
+    // Allow write access only to authenticated users (admins).
+    // This rule is separate to avoid conflicts.
     match /{allPaths=**} {
       allow write: if request.auth != null;
     }
