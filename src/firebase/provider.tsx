@@ -136,10 +136,16 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   };
 };
 
-/** Hook to access Firebase Auth instance. */
+/** Hook to access Firebase Auth instance. Throws an error if Auth is not available. */
 export const useAuth = (): Auth => {
-  const { auth } = useFirebase();
-  return auth;
+  const context = useContext(FirebaseContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within a FirebaseProvider.');
+  }
+  if (!context.auth) {
+    throw new Error('Firebase Auth service is not available. Check FirebaseProvider setup.');
+  }
+  return context.auth;
 };
 
 /** Hook to access Firestore instance. */
