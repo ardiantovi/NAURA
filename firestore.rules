@@ -52,7 +52,7 @@ service cloud.firestore {
      */
     match /products/{productId} {
       allow read: if true;
-      allow write: if isSignedIn() && isAdmin();
+      allow write: if isSignedIn();
     }
 
     /**
@@ -66,7 +66,7 @@ service cloud.firestore {
      */
     match /banners/{bannerId} {
       allow read: if true;
-      allow write: if isSignedIn() && isAdmin();
+      allow write: if isSignedIn();
     }
 
         /**
