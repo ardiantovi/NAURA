@@ -51,7 +51,7 @@ service cloud.firestore {
      * @principle Enforces admin-only access for product management.
      */
     match /products/{productId} {
-      allow read: if isSignedIn() && isAdmin();
+      allow read: if true;
       allow write: if isSignedIn() && isAdmin();
     }
 
@@ -65,7 +65,7 @@ service cloud.firestore {
      * @principle Enforces admin-only access for banner management.
      */
     match /banners/{bannerId} {
-      allow read: if isSignedIn() && isAdmin();
+      allow read: if true;
       allow write: if isSignedIn() && isAdmin();
     }
 
