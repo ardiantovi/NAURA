@@ -70,6 +70,7 @@ export default function Home() {
           <div className="flex flex-col gap-6">
             <Link href="/products" passHref>
               <Button
+                variant="outline"
                 size="lg"
                 className="w-full h-16 text-xl justify-between fade-in-up"
                 style={{ animationDelay: '300ms' }}
