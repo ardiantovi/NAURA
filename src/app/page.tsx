@@ -1,24 +1,14 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import type { Product } from '@/lib/types';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, limit, query as firestoreQuery } from 'firebase/firestore';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
-import Autoplay from "embla-carousel-autoplay";
 import Header from '@/components/header';
 import Footer from '@/components/footer';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ArrowRight, MessageCircle, MapPin } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,19 +17,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-interface Banner {
-  id: string;
-  imageUrl: string;
-  altText: string;
-  linkUrl: string;
-}
-
 export default function Home() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  const plugin = useRef<any>(null);
 
   useEffect(() => {
-    plugin.current = Autoplay({ delay: 5000, stopOnInteraction: true });
     const hasVisited = sessionStorage.getItem('hasVisitedNaura');
     if (!hasVisited) {
       setShowWelcomeModal(true);
@@ -47,14 +28,9 @@ export default function Home() {
     }
   }, []);
 
-  const firestore = useFirestore();
-
-  // Fetch Banners
-  const bannersQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'banners');
-  }, [firestore]);
-  const { data: banners, isLoading: isLoadingBanners } = useCollection<Banner>(bannersQuery);
+  const phoneNumber = "6285183280606";
+  const whatsappUrl = `https://wa.me/${phoneNumber}?text=Halo, saya tertarik dengan produk Anda.`;
+  const mapsUrl = "https://maps.app.goo.gl/GgbWLVomXgASTnu6A";
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -71,52 +47,64 @@ export default function Home() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <main className="flex-grow container mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <section className="mb-12">
-            <Carousel
-                plugins={plugin.current ? [plugin.current] : []}
-                className="w-full"
-                onMouseEnter={() => plugin.current?.stop()}
-                onMouseLeave={() => plugin.current?.reset()}
-                opts={{
-                    loop: true,
-                }}
-            >
-                <CarouselContent>
-                {isLoadingBanners ? (
-                  <CarouselItem>
-                    <Skeleton className="w-full aspect-[2/1] md:aspect-[3/1] rounded-xl" />
-                  </CarouselItem>
-                ) : (
-                  banners?.map((banner, index) => (
-                    <CarouselItem key={banner.id}>
-                      <Link href={banner.linkUrl} passHref>
-                        <Card className="overflow-hidden relative w-full aspect-[2/1] md:aspect-[3/1] flex items-center justify-center text-center bg-card text-card-foreground">
-                            <Image
-                                src={banner.imageUrl.startsWith('http') ? banner.imageUrl : `https://picsum.photos/seed/${banner.imageUrl}/1200/400`}
-                                alt={banner.altText}
-                                fill
-                                className="object-cover"
-                                data-ai-hint="promotional banner"
-                            />
-                             <div className="absolute inset-0 bg-black/50" />
-                             <div className={cn("relative z-10 p-8 fade-in-up")} style={{ animationDelay: `${index * 100}ms` }}>
-                                <h1 className="text-4xl md:text-6xl font-bold font-headline mb-4 tracking-tight text-white">
-                                    {banner.altText}
-                                </h1>
-                            </div>
-                        </Card>
-                      </Link>
-                    </CarouselItem>
-                  ))
-                )}
-                </CarouselContent>
-                <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 hidden md:flex" />
-                <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:flex" />
-            </Carousel>
-        </section>
+      <main className="flex-grow flex items-center justify-center container mx-auto px-4 py-8">
+        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
+          {/* Logo Section */}
+          <div className="flex justify-center fade-in-up" style={{ animationDelay: '100ms' }}>
+            <Card className="w-full max-w-sm aspect-square overflow-hidden rounded-3xl shadow-2xl hover:shadow-primary/20 transition-shadow duration-300">
+              <CardContent className="p-0 flex items-center justify-center h-full">
+                <Image
+                  src="https://picsum.photos/seed/naura-logo/400/400"
+                  alt="Naura Electronic Logo"
+                  width={400}
+                  height={400}
+                  className="object-cover"
+                  data-ai-hint="company logo"
+                  priority
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Links Section */}
+          <div className="flex flex-col gap-6">
+            <Link href="/products" passHref>
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full h-16 text-xl justify-between fade-in-up"
+                style={{ animationDelay: '300ms' }}
+              >
+                Produk
+                <ArrowRight className="h-6 w-6" />
+              </Button>
+            </Link>
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full h-16 text-xl justify-between fade-in-up"
+                style={{ animationDelay: '500ms' }}
+              >
+                LINK WA
+                <MessageCircle className="h-6 w-6" />
+              </Button>
+            </a>
+             <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full h-16 text-xl justify-between fade-in-up"
+                style={{ animationDelay: '700ms' }}
+              >
+                LINK MAPS
+                <MapPin className="h-6 w-6" />
+              </Button>
+            </a>
+          </div>
+        </div>
       </main>
+
       <Footer />
     </div>
   );
