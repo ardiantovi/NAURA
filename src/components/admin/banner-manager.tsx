@@ -4,8 +4,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
-import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,11 +80,15 @@ export default function BannerManager() {
     setIsAlertOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (bannerToDelete && firestore) {
-      const docRef = doc(firestore, 'banners', bannerToDelete.id);
-      deleteDocumentNonBlocking(docRef);
-      toast({ title: 'Banner Deleted' });
+      try {
+        const docRef = doc(firestore, 'banners', bannerToDelete.id);
+        await deleteDoc(docRef);
+        toast({ title: 'Banner Deleted' });
+      } catch (error: any) {
+        toast({ title: 'Error Deleting Banner', description: error.message, variant: 'destructive' });
+      }
     }
     setIsAlertOpen(false);
     setBannerToDelete(null);
@@ -102,7 +105,10 @@ export default function BannerManager() {
   };
 
   const handleFormSubmit = async (values: BannerFormValues) => {
-    if (!firestore || !bannersCollection) return;
+    if (!firestore || !bannersCollection) {
+        toast({ title: 'Error', description: 'Firestore is not initialized.', variant: 'destructive'});
+        return;
+    }
     
     setIsFormOpen(false);
     
@@ -135,10 +141,10 @@ export default function BannerManager() {
 
         if (selectedBanner) {
             const docRef = doc(firestore, 'banners', selectedBanner.id);
-            updateDocumentNonBlocking(docRef, bannerData);
+            await updateDoc(docRef, bannerData);
             toast({ title: 'Banner Updated' });
         } else {
-            addDocumentNonBlocking(bannersCollection, bannerData);
+            await addDoc(bannersCollection, bannerData);
             toast({ title: 'Banner Added' });
         }
         dismiss(toastId);

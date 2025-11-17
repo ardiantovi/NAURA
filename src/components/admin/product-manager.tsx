@@ -4,7 +4,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
-import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { Product } from '@/lib/types';
@@ -70,11 +69,15 @@ export default function ProductManager() {
     setIsAlertOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (productToDelete && firestore) {
-      const docRef = doc(firestore, 'products', productToDelete.id);
-      deleteDocumentNonBlocking(docRef);
-      toast({ title: 'Product Deleted' });
+      try {
+        const docRef = doc(firestore, 'products', productToDelete.id);
+        await deleteDoc(docRef);
+        toast({ title: 'Product Deleted' });
+      } catch (error: any) {
+         toast({ title: 'Error Deleting Product', description: error.message, variant: 'destructive' });
+      }
     }
     setIsAlertOpen(false);
     setProductToDelete(null);
@@ -94,7 +97,10 @@ export default function ProductManager() {
   };
 
   const handleFormSubmit = async (values: ProductFormValues) => {
-    if (!firestore || !productsCollection) return;
+    if (!firestore || !productsCollection) {
+        toast({ title: 'Error', description: 'Firestore is not initialized.', variant: 'destructive'});
+        return;
+    }
 
     setIsFormOpen(false);
 
@@ -126,10 +132,10 @@ export default function ProductManager() {
 
         if (selectedProduct) {
             const docRef = doc(firestore, 'products', selectedProduct.id);
-            updateDocumentNonBlocking(docRef, productData);
+            await updateDoc(docRef, productData);
             toast({ title: 'Product Updated Successfully' });
         } else {
-            addDocumentNonBlocking(productsCollection, productData);
+            await addDoc(productsCollection, productData);
             toast({ title: 'Product Added Successfully' });
         }
         dismiss(toastId);
