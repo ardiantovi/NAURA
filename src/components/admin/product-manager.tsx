@@ -85,70 +85,104 @@ export default function ProductManager() {
      
      setIsFormOpen(false);
      
-     if (!values.images && !values.existingImages?.length) {
-        saveProductData(values, []);
+     const files = values.images as FileList | undefined;
+     if (!files || files.length === 0) {
+        saveProductData(values, values.existingImages || []);
         return;
      }
 
-     const files = values.images as FileList | undefined;
-     if (files && files.length > 0) {
-        const storage = getStorage();
-        const toastId = `upload-${Date.now()}`;
+     const storage = getStorage();
+     const toastId = `upload-${Date.now()}`;
 
-        let totalBytes = 0;
-        Array.from(files).forEach(file => totalBytes += file.size);
-        let totalBytesTransferred = 0;
+     let totalBytes = 0;
+     Array.from(files).forEach(file => totalBytes += file.size);
+     let totalBytesTransferred = 0;
 
-        toast({
-            id: toastId,
-            title: `Uploading ${files.length} image(s)...`,
-            description: 'Please wait.',
-            progress: 0,
+     toast({
+         id: toastId,
+         title: `Uploading ${files.length} image(s)...`,
+         description: 'Please wait.',
+         progress: 0,
+     });
+
+     const uploadPromises = Array.from(files).map(file => {
+         const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
+         const uploadTask = uploadBytesResumable(storageRef, file);
+
+         return new Promise<string>((resolve, reject) => {
+             uploadTask.on('state_changed',
+                 (snapshot: UploadTaskSnapshot) => {
+                    // This specific upload's progress. We will calculate total progress below.
+                 },
+                 reject,
+                 async () => {
+                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                     resolve(downloadURL);
+                 }
+             );
+             // A bit of a hack to track total progress across multiple uploads
+             uploadTask.on('state_changed', (snapshot: UploadTaskSnapshot) => {
+                // This listener is just to update the total progress
+                // We find the delta and add it to the total
+             });
+             const progressTracker = (snapshot: UploadTaskSnapshot) => {
+                const recentBytes = snapshot.bytesTransferred;
+                // This isn't perfect, but gives a reasonable progress feel
+                // A better approach would need to track each upload's progress individually
+             };
+             // A simpler way to update progress is to just update on each state_changed event
+             uploadTask.on('state_changed', (snapshot) => {
+                let currentTotal = 0;
+                // this is not a perfect science as we don't know which promise has updated
+                // we sum up the bytes transferred from all tasks on every update
+                
+                // Let's try a simpler approach. Sum up total transferred and update.
+                // This is not perfect, so we'll just track total and update based on that.
+             });
+         });
+     });
+
+    // Let's use a more robust way to track progress
+    const allUploadTasks = Array.from(files).map(file => {
+        const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
+        return uploadBytesResumable(storageRef, file);
+    });
+
+    allUploadTasks.forEach(task => {
+        task.on('state_changed', (snapshot) => {
+            const totalTransferred = allUploadTasks.reduce((acc, t) => acc + t.snapshot.bytesTransferred, 0);
+            const totalSize = allUploadTasks.reduce((acc, t) => acc + t.snapshot.totalBytes, 0);
+            if (totalSize > 0) {
+              const progress = (totalTransferred / totalSize) * 100;
+              toast({
+                  id: toastId,
+                  title: `Uploading ${files.length} image(s)...`,
+                  progress: progress,
+              });
+            }
         });
+    });
 
-        const uploadPromises = Array.from(files).map(file => {
-            const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
-            const uploadTask = uploadBytesResumable(storageRef, file);
-
-            return new Promise<string>((resolve, reject) => {
-                uploadTask.on('state_changed',
-                    (snapshot: UploadTaskSnapshot) => {
-                        // This logic is tricky for multiple files, we'll sum up the progress
-                    },
-                    reject,
-                    async () => {
-                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                        totalBytesTransferred += file.size;
-                        const progress = (totalBytesTransferred / totalBytes) * 100;
-                        
-                        toast({
-                            id: toastId,
-                            title: `Uploading ${files.length} image(s)...`,
-                            progress,
-                        });
-
-                        resolve(downloadURL);
-                    }
-                );
-            });
-        });
-        
-        Promise.all(uploadPromises).then(imageUrls => {
-            toast({ id: toastId, title: 'Upload complete!', description: 'Saving product data...', progress: 100 });
-            saveProductData(values, imageUrls);
-             setTimeout(() => dismiss(toastId), 1000);
-        }).catch(error => {
-            console.error("Error uploading files:", error);
-            toast({
-                id: toastId,
-                variant: "destructive",
-                title: "Upload Failed",
-                description: "Could not upload images.",
-            });
-        });
-     } else {
-         saveProductData(values, values.existingImages || []);
-     }
+    const allPromises = allUploadTasks.map(task => new Promise<string>((resolve, reject) => {
+        task.then(async snapshot => {
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            resolve(downloadURL);
+        }).catch(reject);
+    }));
+     
+     Promise.all(allPromises).then(imageUrls => {
+         toast({ id: toastId, title: 'Upload complete!', description: 'Saving product data...', progress: 100 });
+         saveProductData(values, imageUrls);
+         setTimeout(() => dismiss(toastId), 2000); // Dismiss after 2 seconds
+     }).catch(error => {
+         console.error("Error uploading files:", error);
+         toast({
+             id: toastId,
+             variant: "destructive",
+             title: "Upload Failed",
+             description: "Could not upload images.",
+         });
+     });
   };
 
   const saveProductData = (values: ProductFormValues, imageUrls: string[]) => {

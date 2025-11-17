@@ -68,7 +68,7 @@ const addToRemoveQueue = (toastId: string) => {
   const timeout = setTimeout(() => {
     toastTimeouts.delete(toastId)
     dispatch({
-      type: "REMOVE_TOAST",
+      type: "DISMISS_TOAST",
       toastId: toastId,
     })
   }, TOAST_REMOVE_DELAY)
@@ -105,6 +105,14 @@ export const reducer = (state: State, action: Action): State => {
 
     case "DISMISS_TOAST": {
       const { toastId } = action
+      if (toastId) {
+        addToRemoveQueue(toastId)
+      } else {
+        state.toasts.forEach((t) => {
+          addToRemoveQueue(t.id)
+        })
+      }
+      
       return {
         ...state,
         toasts: state.toasts.map((t) =>
@@ -160,15 +168,11 @@ function toast(props: Toast) {
         open: true,
         onOpenChange: (open) => {
           if (!open) {
-            dispatch({ type: "DISMISS_TOAST", toastId: id });
+            dispatch({ type: "REMOVE_TOAST", toastId: id });
           }
         },
       },
     });
-    // Only set a timeout if the toast does NOT have a progress bar
-    if (props.progress === undefined) {
-       addToRemoveQueue(id);
-    }
   }
 
   return {
@@ -196,18 +200,6 @@ function useToast() {
     toast,
     dismiss: (toastId?: string) => {
         dispatch({ type: "DISMISS_TOAST", toastId });
-        // Immediately remove from queue if manually dismissed
-        if (toastId) {
-            const timeout = toastTimeouts.get(toastId);
-            if (timeout) {
-                clearTimeout(timeout);
-                toastTimeouts.delete(toastId);
-            }
-            // A short delay to allow fade out animation before removing
-            setTimeout(() => {
-                 dispatch({ type: "REMOVE_TOAST", toastId });
-            }, 500);
-        }
     },
   }
 }

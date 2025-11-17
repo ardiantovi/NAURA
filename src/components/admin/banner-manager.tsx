@@ -113,12 +113,12 @@ export default function BannerManager() {
         uploadTask.on('state_changed', 
             (snapshot: UploadTaskSnapshot) => {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                toast({ id: toastId, progress: progress });
+                toast({ id: toastId, progress: progress, title: 'Uploading image...' });
             },
             (error) => {
                 console.error("Upload failed:", error);
+                dismiss(toastId);
                 toast({
-                    id: toastId,
                     variant: "destructive",
                     title: "Upload Failed",
                     description: "Could not upload the image.",
@@ -134,7 +134,7 @@ export default function BannerManager() {
                 });
                 
                 saveBannerData(imageUrl, values);
-                setTimeout(() => dismiss(toastId), 1000);
+                setTimeout(() => dismiss(toastId), 2000);
             }
         );
     } else if (selectedBanner) {
