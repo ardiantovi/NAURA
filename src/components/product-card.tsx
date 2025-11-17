@@ -1,15 +1,23 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Product } from '@/lib/types';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Lightbulb } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
 
 interface ProductCardProps {
   product: Product;
+  recommendationReason?: string;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, recommendationReason }: ProductCardProps) {
   const imageUrl = product.images?.[0] || `https://picsum.photos/seed/${product.id}/600/400`;
 
   const phoneNumber = "6285183280606"; // Ganti dengan nomor WhatsApp Anda
@@ -22,7 +30,21 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-      <CardHeader className="p-4">
+       {recommendationReason && (
+         <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="absolute top-2 right-2 z-10 bg-accent text-accent-foreground rounded-full p-2 cursor-pointer">
+                  <Lightbulb className="h-5 w-5" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">{recommendationReason}</p>
+              </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+      )}
+      <CardHeader className="p-4 relative">
         <Link href={`/products/${product.id}`} className="block group">
           <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-lg">
             <Image

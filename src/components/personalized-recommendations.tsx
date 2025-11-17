@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import {
+  personalizedProductRecommendations,
   type PersonalizedProductRecommendationsOutput,
 } from '@/ai/flows/personalized-product-recommendations';
 import {
@@ -13,7 +14,6 @@ import {
 import ProductCard from './product-card';
 import { Skeleton } from './ui/skeleton';
 import { Card, CardContent } from './ui/card';
-import { getRecommendationsAction } from '@/app/actions';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import type { Product } from '@/lib/types';
 import { collection } from 'firebase/firestore';
@@ -23,31 +23,45 @@ export default function PersonalizedRecommendations() {
   const [isLoading, setIsLoading] = useState(true);
 
   const firestore = useFirestore();
+  
   const productsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'products');
   }, [firestore]);
-  const { data: products } = useCollection<Product>(productsQuery);
+  const { data: allProducts } = useCollection<Product>(productsQuery);
 
   useEffect(() => {
-    getRecommendationsAction()
-      .then(setRecommendations)
-      .catch((err) => {
-        console.error("Failed to get recommendations:", err);
-        setRecommendations({ recommendations: [] }); // Set to empty to stop loading
-      })
-      .finally(() => setIsLoading(false));
-  }, []);
+    if (allProducts && allProducts.length > 0) {
+      // Simulate browsing history by taking the first few products
+      const browsingHistory = allProducts.slice(0, 3).map(product => ({
+        productId: product.id,
+        productName: product.name,
+        category: product.category,
+      }));
 
-  if (!products) {
+      personalizedProductRecommendations({ browsingHistory })
+        .then(setRecommendations)
+        .catch((err) => {
+          console.error("Failed to get recommendations:", err);
+          setRecommendations({ recommendations: [] }); // Set to empty to stop loading
+        })
+        .finally(() => setIsLoading(false));
+    } else if (allProducts) {
+      // Products loaded but are empty, so no recommendations to generate
+      setIsLoading(false);
+      setRecommendations({ recommendations: [] });
+    }
+  }, [allProducts]);
+
+  if (!allProducts) {
     return null; // or a loading state for products
   }
 
   const recommendedProducts = recommendations?.recommendations.map(rec => {
     // Find the full product details from our Firestore data
-    const product = products.find(p => p.id === rec.productId || p.name === rec.productName);
+    const product = allProducts.find(p => p.id === rec.productId || p.name === rec.productName);
     return product ? { ...product, reason: rec.reason } : null;
-  }).filter(Boolean);
+  }).filter(Boolean) as (Product & { reason: string })[] | null;
 
 
   if (isLoading) {
@@ -83,7 +97,7 @@ export default function PersonalizedRecommendations() {
           product ? (
             <CarouselItem key={product.id} className="md:basis-1/2 lg:basis-1/3">
               <div className="p-1 h-full">
-                <ProductCard product={product} />
+                <ProductCard product={product} recommendationReason={product.reason} />
               </div>
             </CarouselItem>
           ) : null
