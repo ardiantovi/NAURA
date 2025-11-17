@@ -3,10 +3,9 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, doc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, UploadTaskSnapshot } from 'firebase/storage';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,7 +45,6 @@ export default function ProductManager() {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const firestore = useFirestore();
-  const auth = useAuth();
   const { toast } = useToast();
 
   const productsCollection = useMemoFirebase(
@@ -81,71 +79,14 @@ export default function ProductManager() {
   };
 
   const handleFormSubmit = (values: ProductFormValues) => {
-     if (!firestore || !auth) return;
+     if (!firestore || !productsCollection) return;
      
      setIsFormOpen(false);
      
-     const files = values.images as FileList | undefined;
-     if (!files || files.length === 0) {
-        saveProductData(values, values.existingImages || []);
-        return;
-     }
+     // Split the text area content by new lines and filter out empty lines
+     const imageUrls = values.imageUrls.split('\n').map(url => url.trim()).filter(url => url);
 
-     const storage = getStorage();
-     const uploadToast = toast({
-         title: `Uploading ${files.length} image(s)...`,
-         description: 'Please wait.',
-         progress: 0,
-     });
-
-    const allUploadTasks = Array.from(files).map(file => {
-        const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
-        return uploadBytesResumable(storageRef, file);
-    });
-
-    // This listener updates the progress for all uploads combined.
-    let totalBytes = 0;
-    let totalTransferred = 0;
-    
-    allUploadTasks.forEach(task => {
-        totalBytes += task.snapshot.totalBytes;
-        task.on('state_changed', 
-            (snapshot) => {
-                // This approach is not perfect for multiple files as bytesTransferred resets per file.
-                // A better approach would be to calculate total progress more accurately.
-                // For now, we'll just track the last known progress of any file.
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                uploadToast.update({ progress: progress });
-            }
-        );
-    });
-
-
-    const allPromises = allUploadTasks.map(task => new Promise<string>((resolve, reject) => {
-        task.then(async snapshot => {
-            const downloadURL = await getDownloadURL(snapshot.ref);
-            resolve(downloadURL);
-        }).catch(reject);
-    }));
-     
-     Promise.all(allPromises).then(imageUrls => {
-         uploadToast.update({ title: 'Upload complete!', description: 'Saving product data...', progress: 100 });
-         saveProductData(values, imageUrls);
-         setTimeout(() => uploadToast.dismiss(), 2000);
-     }).catch(error => {
-         console.error("Error uploading files:", error);
-         uploadToast.update({
-             variant: "destructive",
-             title: "Upload Failed",
-             description: "Could not upload images.",
-         });
-     });
-  };
-
-  const saveProductData = (values: ProductFormValues, imageUrls: string[]) => {
-      if (!firestore || !productsCollection) return;
-
-      const productData = {
+     const productData = {
         name: values.name,
         description: values.description,
         price: values.price,
@@ -163,11 +104,12 @@ export default function ProductManager() {
           addDocumentNonBlocking(productsCollection, productData);
           toast({ title: 'Product Added Successfully' });
       }
-  }
+  };
   
   const getImageUrl = (imageUrl: string | undefined) => {
     if (!imageUrl) return 'https://placehold.co/40x40/f3f4f6/333?text=?';
-    return imageUrl.startsWith('http') ? imageUrl : `https://picsum.photos/seed/${imageUrl}/40/40`;
+    // No need for picsum fallback, as we expect a full URL
+    return imageUrl;
   };
 
   const formatRupiah = (price: number) => {

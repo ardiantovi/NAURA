@@ -3,10 +3,9 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, doc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, UploadTaskSnapshot } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -57,7 +56,6 @@ export default function BannerManager() {
   const [bannerToDelete, setBannerToDelete] = useState<Banner | null>(null);
 
   const firestore = useFirestore();
-  const auth = useAuth();
   const { toast } = useToast();
 
   const bannersCollection = useMemoFirebase(
@@ -92,78 +90,33 @@ export default function BannerManager() {
   };
 
   const handleFormSubmit = (values: BannerFormValues) => {
-    if (!firestore || !auth) return;
+    if (!firestore || !bannersCollection) return;
     
     setIsFormOpen(false);
 
-    if (values.image) {
-        const storage = getStorage();
-        const file = values.image as File;
-        const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-        
-        const uploadToast = toast({
-            title: 'Uploading image...',
-            description: 'Please wait.',
-            progress: 0,
-        });
+    const bannerData = {
+        altText: values.altText,
+        linkUrl: values.linkUrl,
+        imageUrl: values.imageUrl,
+        startDate: selectedBanner?.startDate || new Date().toISOString(),
+        endDate: selectedBanner?.endDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(), // 1 year from now
+        priority: selectedBanner?.priority || 0,
+    };
 
-        uploadTask.on('state_changed', 
-            (snapshot: UploadTaskSnapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                uploadToast.update({ progress: progress });
-            },
-            (error) => {
-                console.error("Upload failed:", error);
-                uploadToast.update({
-                    variant: "destructive",
-                    title: "Upload Failed",
-                    description: "Could not upload the image.",
-                });
-            },
-            async () => {
-                const imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
-                uploadToast.update({ 
-                    title: 'Upload successful!', 
-                    description: 'Saving banner data...',
-                    progress: 100
-                });
-                
-                saveBannerData(imageUrl, values);
-                setTimeout(() => uploadToast.dismiss(), 2000);
-            }
-        );
-    } else if (selectedBanner) {
-        saveBannerData(selectedBanner.imageUrl, values);
+    if (selectedBanner) {
+        const docRef = doc(firestore, 'banners', selectedBanner.id);
+        updateDocumentNonBlocking(docRef, bannerData);
+        toast({ title: 'Banner Updated' });
+    } else {
+        addDocumentNonBlocking(bannersCollection, bannerData);
+        toast({ title: 'Banner Added' });
     }
   };
-
-  const saveBannerData = (imageUrl: string, values: BannerFormValues) => {
-      if (!firestore || !bannersCollection) return;
-
-      const bannerData = {
-          altText: values.altText,
-          linkUrl: values.linkUrl,
-          imageUrl: imageUrl,
-          startDate: selectedBanner?.startDate || new Date().toISOString(),
-          endDate: selectedBanner?.endDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(), // 1 year from now
-          priority: selectedBanner?.priority || 0,
-      };
-
-      if (selectedBanner) {
-          const docRef = doc(firestore, 'banners', selectedBanner.id);
-          updateDocumentNonBlocking(docRef, bannerData);
-          toast({ title: 'Banner Updated' });
-      } else {
-          addDocumentNonBlocking(bannersCollection, bannerData);
-          toast({ title: 'Banner Added' });
-      }
-  }
 
 
   const getImageUrl = (imageUrl: string) => {
     if (!imageUrl) return 'https://placehold.co/80x40/f3f4f6/333?text=?';
-    return imageUrl.startsWith('http') ? imageUrl : `https://picsum.photos/seed/${imageUrl}/80/40`;
+    return imageUrl;
   };
 
   return (

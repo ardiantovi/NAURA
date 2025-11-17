@@ -32,12 +32,12 @@ interface Banner {
 }
 
 const formSchema = z.object({
-  image: z.any().optional(), // Allow file or existing URL string
+  imageUrl: z.string().url('Must be a valid URL'),
   altText: z.string().min(1, 'Alt text is required'),
   linkUrl: z.string().url('Must be a valid URL'),
 });
 
-export type BannerFormValues = z.infer<typeof formSchema> & { imageUrl?: string };
+export type BannerFormValues = z.infer<typeof formSchema>;
 
 
 interface BannerFormProps {
@@ -52,7 +52,6 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
     imageUrl: banner?.imageUrl || '',
     altText: banner?.altText || '',
     linkUrl: banner?.linkUrl || '',
-    image: undefined,
   };
 
   const form = useForm<BannerFormValues>({
@@ -65,7 +64,6 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
         altText: banner?.altText || '',
         linkUrl: banner?.linkUrl || '',
         imageUrl: banner?.imageUrl || '',
-        image: undefined,
     });
   }, [banner, isOpen, form]);
 
@@ -84,21 +82,14 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="image"
+              name="imageUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image</FormLabel>
+                  <FormLabel>Image URL</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)}
-                    />
+                    <Input {...field} placeholder="https://example.com/image.png" />
                   </FormControl>
                   <FormMessage />
-                  {banner?.imageUrl && !field.value && (
-                    <p className="text-sm text-muted-foreground mt-2">Current image will be kept. Upload a new file to replace it.</p>
-                  )}
                 </FormItem>
               )}
             />

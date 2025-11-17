@@ -38,10 +38,10 @@ const formSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   price: z.coerce.number().positive('Price must be positive'),
   brand: z.string().min(1, 'Brand is required'),
-  images: z.any().optional(), // Allow FileList or existing string array
+  imageUrls: z.string().min(1, 'At least one image URL is required.'),
 });
 
-export type ProductFormValues = z.infer<typeof formSchema> & { existingImages?: string[] };
+export type ProductFormValues = z.infer<typeof formSchema>;
 
 
 interface ProductFormProps {
@@ -57,8 +57,7 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
     description: product?.description || '',
     price: product?.price || 0,
     brand: product?.brand || '',
-    images: undefined,
-    existingImages: product?.images || [],
+    imageUrls: product?.images?.join('\n') || '',
   };
   
   const form = useForm<ProductFormValues>({
@@ -72,8 +71,7 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
       description: product?.description || '',
       price: product?.price || 0,
       brand: product?.brand || '',
-      images: undefined,
-      existingImages: product?.images || [],
+      imageUrls: product?.images?.join('\n') || '',
     });
   }, [product, isOpen, form]);
 
@@ -158,24 +156,18 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
               />
             <FormField
               control={form.control}
-              name="images"
+              name="imageUrls"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Product Images</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="file" 
-                      accept="image/*" 
-                      multiple
-                      onChange={(e) => field.onChange(e.target.files)}
-                    />
-                  </FormControl>
+                  <FormLabel>Product Image URLs</FormLabel>
+                   <FormControl>
+                      <Textarea 
+                        {...field} 
+                        rows={4}
+                        placeholder="Paste image URLs here, one per line."
+                      />
+                    </FormControl>
                   <FormMessage />
-                   {product?.images && product.images.length > 0 && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Current images will be kept. Upload new files to replace them.
-                    </p>
-                  )}
                 </FormItem>
               )}
             />
