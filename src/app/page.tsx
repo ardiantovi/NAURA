@@ -26,9 +26,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import ProductCard from '@/components/product-card';
-import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
 
 interface Banner {
   id: string;
@@ -58,14 +55,6 @@ export default function Home() {
     return collection(firestore, 'banners');
   }, [firestore]);
   const { data: banners, isLoading: isLoadingBanners } = useCollection<Banner>(bannersQuery);
-
-  // Fetch Featured Products
-  const productsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return firestoreQuery(collection(firestore, 'products'), limit(6));
-  }, [firestore]);
-  const { data: featuredProducts, isLoading: isLoadingProducts } = useCollection<Product>(productsQuery);
-
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -126,37 +115,6 @@ export default function Home() {
                 <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 hidden md:flex" />
                 <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:flex" />
             </Carousel>
-        </section>
-
-        {/* Featured Products Section */}
-        <section>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-bold font-headline">Produk Unggulan</h2>
-            <Button asChild variant="outline">
-              <Link href="/products">
-                Lihat Semua Produk <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-          {isLoadingProducts ? (
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {[...Array(6)].map((_, i) => (
-                    <Card key={i}>
-                        <CardContent className="p-4 space-y-4">
-                        <Skeleton className="h-40 w-full" />
-                        <Skeleton className="h-6 w-3/4" />
-                        <Skeleton className="h-6 w-1/2" />
-                        </CardContent>
-                    </Card>
-                    ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {featuredProducts?.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            )}
         </section>
       </main>
       <Footer />
