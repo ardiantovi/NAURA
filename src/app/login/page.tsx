@@ -56,25 +56,26 @@ export default function LoginPage() {
     try {
         await signInWithEmailAndPassword(auth, email, password);
         toast({ title: "Login successful!"});
-        router.push('/admin');
+        // onAuthStateChanged will handle the redirect
     } catch (err: any) {
         if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-            // User does not exist, let's create a new admin account
+            // User does not exist, so create the first admin account.
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const newUser = userCredential.user;
                 
-                // CRITICAL: Grant admin role and WAIT for it to complete
+                // Grant admin role and wait for it to complete.
                 await grantAdminRole(firestore, newUser);
                 
+                // IMPORTANT: Do NOT log the user in.
+                // Inform them that the account is created and they need to log in.
                 toast({
                     title: "Admin Account Created",
-                    description: "Your admin account has been created. Redirecting to dashboard...",
+                    description: "Your admin account has been created. Please log in to continue.",
+                    duration: 5000,
                 });
-                
-                // The onAuthStateChanged listener will handle the redirect
-                // but we can push it manually to be sure.
-                router.push('/admin');
+                // Clear password field for security
+                setPassword('');
 
             } catch (createErr: any) {
                 const errorMessage = createErr.message || "An unknown error occurred during sign up.";
@@ -99,7 +100,7 @@ export default function LoginPage() {
     }
   };
   
-  if (isUserLoading || isLoading) {
+  if (isUserLoading) {
       return (
         <div className="flex flex-col min-h-screen">
           <Header />
@@ -111,8 +112,9 @@ export default function LoginPage() {
       )
   }
   
+  // This will be null on the first render, or if the user is logged out.
+  // If the user IS logged in, the useEffect will redirect them.
   if(user) {
-      // already logged in, redirecting
       return null;
   }
 
@@ -123,7 +125,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle>Admin Login</CardTitle>
-            <CardDescription>Enter your credentials to access the admin panel. If the account doesn't exist, an admin account will be created for you.</CardDescription>
+            <CardDescription>Enter your credentials. If the account doesn't exist, the first admin account will be created for you.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
