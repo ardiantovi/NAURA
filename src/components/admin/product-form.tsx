@@ -38,10 +38,11 @@ const formSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   price: z.coerce.number().positive('Price must be positive'),
   brand: z.string().min(1, 'Brand is required'),
-  images: z.string().transform(val => val.split(',').map(s => s.trim()).filter(Boolean)),
+  images: z.any().optional(), // Allow FileList or existing string array
 });
 
-type ProductFormValues = z.infer<typeof formSchema>;
+export type ProductFormValues = z.infer<typeof formSchema> & { existingImages?: string[] };
+
 
 interface ProductFormProps {
   isOpen: boolean;
@@ -56,7 +57,8 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
     description: product?.description || '',
     price: product?.price || 0,
     brand: product?.brand || '',
-    images: product?.images?.join(', ') || '',
+    images: undefined,
+    existingImages: product?.images || [],
   };
   
   const form = useForm<ProductFormValues>({
@@ -65,17 +67,14 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
   });
 
   useEffect(() => {
-    if (product) {
-      form.reset(defaultValues);
-    } else {
-      form.reset({
-        name: '',
-        description: '',
-        price: 0,
-        brand: '',
-        images: '',
-      });
-    }
+    form.reset({
+      name: product?.name || '',
+      description: product?.description || '',
+      price: product?.price || 0,
+      brand: product?.brand || '',
+      images: undefined,
+      existingImages: product?.images || [],
+    });
   }, [product, isOpen, form]);
 
 
@@ -162,11 +161,21 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
               name="images"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image URLs (comma-separated)</FormLabel>
+                  <FormLabel>Product Images</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="https://..., https://..." />
+                    <Input 
+                      type="file" 
+                      accept="image/*" 
+                      multiple
+                      onChange={(e) => field.onChange(e.target.files)}
+                    />
                   </FormControl>
                   <FormMessage />
+                   {product?.images && product.images.length > 0 && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Current images will be kept. Upload new files to replace them.
+                    </p>
+                  )}
                 </FormItem>
               )}
             />

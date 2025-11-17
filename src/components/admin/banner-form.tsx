@@ -32,12 +32,13 @@ interface Banner {
 }
 
 const formSchema = z.object({
-  imageUrl: z.string().url('Must be a valid URL'),
+  image: z.any().optional(), // Allow file or existing URL string
   altText: z.string().min(1, 'Alt text is required'),
   linkUrl: z.string().url('Must be a valid URL'),
 });
 
-type BannerFormValues = z.infer<typeof formSchema>;
+export type BannerFormValues = z.infer<typeof formSchema> & { imageUrl?: string };
+
 
 interface BannerFormProps {
   isOpen: boolean;
@@ -51,6 +52,7 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
     imageUrl: banner?.imageUrl || '',
     altText: banner?.altText || '',
     linkUrl: banner?.linkUrl || '',
+    image: undefined,
   };
 
   const form = useForm<BannerFormValues>({
@@ -59,7 +61,12 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
   });
 
   useEffect(() => {
-    form.reset(banner || defaultValues);
+    form.reset({
+        altText: banner?.altText || '',
+        linkUrl: banner?.linkUrl || '',
+        imageUrl: banner?.imageUrl || '',
+        image: undefined,
+    });
   }, [banner, isOpen, form]);
 
   const handleSubmit = (values: BannerFormValues) => {
@@ -77,14 +84,21 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="imageUrl"
+              name="image"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image URL</FormLabel>
+                  <FormLabel>Image</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="https://example.com/image.png"/>
+                    <Input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)}
+                    />
                   </FormControl>
                   <FormMessage />
+                  {banner?.imageUrl && !field.value && (
+                    <p className="text-sm text-muted-foreground mt-2">Current image will be kept. Upload a new file to replace it.</p>
+                  )}
                 </FormItem>
               )}
             />

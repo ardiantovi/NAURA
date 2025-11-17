@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, doc } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -15,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { MoreHorizontal, PlusCircle, Trash, Edit } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash, Edit, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,8 +33,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { BannerForm } from './banner-form';
+import { BannerForm, BannerFormValues } from './banner-form';
 import { Skeleton } from '../ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+
 
 // Simple Banner type for this component
 interface Banner {
@@ -46,10 +49,13 @@ interface Banner {
 export default function BannerManager() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [selectedBanner, setSelectedBanner] = useState<Banner | null>(null);
   const [bannerToDelete, setBannerToDelete] = useState<Banner | null>(null);
 
   const firestore = useFirestore();
+  const auth = useAuth();
+  const { toast } = useToast();
 
   const bannersCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'banners') : null),
@@ -81,29 +87,54 @@ export default function BannerManager() {
     setBannerToDelete(null);
   };
 
-  const handleFormSubmit = (values: any) => {
-    if (!firestore) return;
-    
-    // Add default values for non-form fields
-    const fullBannerData = {
-        ...values,
-        startDate: new Date().toISOString(),
-        endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(), // 1 year from now
-        priority: 0,
-    };
+  const handleFormSubmit = async (values: BannerFormValues) => {
+    if (!firestore || !auth) return;
+    setIsUploading(true);
 
+    let imageUrl = selectedBanner?.imageUrl || '';
 
-    if (selectedBanner) {
-      // Update existing banner
-      const docRef = doc(firestore, 'banners', selectedBanner.id);
-      updateDocumentNonBlocking(docRef, fullBannerData);
-    } else {
-      // Add new banner
-      if (bannersCollection) {
-        addDocumentNonBlocking(bannersCollection, fullBannerData);
-      }
+    try {
+        if (values.image) {
+            const storage = getStorage();
+            const file = values.image as File;
+            const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
+            
+            toast({ title: 'Uploading image...', description: 'Please wait.' });
+            const snapshot = await uploadBytes(storageRef, file);
+            imageUrl = await getDownloadURL(snapshot.ref);
+            toast({ title: 'Upload successful!', description: 'Image is now available.' });
+        }
+
+        const bannerData = {
+            altText: values.altText,
+            linkUrl: values.linkUrl,
+            imageUrl: imageUrl,
+            startDate: selectedBanner?.startDate || new Date().toISOString(),
+            endDate: selectedBanner?.endDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(), // 1 year from now
+            priority: selectedBanner?.priority || 0,
+        };
+
+        if (selectedBanner) {
+            const docRef = doc(firestore, 'banners', selectedBanner.id);
+            updateDocumentNonBlocking(docRef, bannerData);
+            toast({ title: 'Banner Updated' });
+        } else {
+            if (bannersCollection) {
+                addDocumentNonBlocking(bannersCollection, bannerData);
+                toast({ title: 'Banner Added' });
+            }
+        }
+    } catch (error) {
+        console.error("Error uploading file or saving banner:", error);
+        toast({
+            variant: "destructive",
+            title: "Upload Failed",
+            description: "Could not upload the image or save the banner.",
+        });
+    } finally {
+        setIsUploading(false);
+        setIsFormOpen(false);
     }
-    setIsFormOpen(false);
   };
 
   const getImageUrl = (imageUrl: string) => {
@@ -189,6 +220,15 @@ export default function BannerManager() {
         onSubmit={handleFormSubmit}
         banner={selectedBanner}
       />
+
+      {isUploading && (
+        <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
+            <div className="flex items-center space-x-2">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <p className="text-lg">Uploading image...</p>
+            </div>
+        </div>
+      )}
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>

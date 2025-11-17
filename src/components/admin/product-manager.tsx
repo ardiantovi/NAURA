@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, doc } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { MoreHorizontal, PlusCircle, Trash, Edit } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash, Edit, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,16 +34,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { ProductForm } from './product-form';
+import { ProductForm, ProductFormValues } from './product-form';
 import { Skeleton } from '../ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ProductManager() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const firestore = useFirestore();
+  const auth = useAuth();
+  const { toast } = useToast();
 
   const productsCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'products') : null),
@@ -74,28 +79,66 @@ export default function ProductManager() {
     setProductToDelete(null);
   };
 
-  const handleFormSubmit = (values: any) => {
-     if (!firestore) return;
-     
-     const fullProductData = {
-        ...values,
-        category: values.category || 'Audio',
-     }
+  const uploadImages = async (files: FileList): Promise<string[]> => {
+    const storage = getStorage();
+    const imageUrls: string[] = [];
+    toast({ title: `Uploading ${files.length} images...`, description: 'Please wait.' });
 
-    if (selectedProduct) {
-      // Update existing product
-      const docRef = doc(firestore, 'products', selectedProduct.id);
-      updateDocumentNonBlocking(docRef, fullProductData);
-    } else {
-      // Add new product
-      if (productsCollection) {
-        addDocumentNonBlocking(productsCollection, fullProductData);
-      }
+    for (const file of Array.from(files)) {
+      const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      imageUrls.push(downloadURL);
     }
-    setIsFormOpen(false);
+    
+    toast({ title: 'Upload successful!', description: `${files.length} images are now available.` });
+    return imageUrls;
+  };
+
+  const handleFormSubmit = async (values: ProductFormValues) => {
+     if (!firestore || !auth) return;
+     setIsUploading(true);
+
+     try {
+        let imageUrls = values.existingImages || [];
+        if (values.images && values.images.length > 0) {
+            imageUrls = await uploadImages(values.images as FileList);
+        }
+
+        const productData = {
+          name: values.name,
+          description: values.description,
+          price: values.price,
+          brand: values.brand,
+          images: imageUrls,
+          category: 'Audio', // Default category
+        };
+
+        if (selectedProduct) {
+            const docRef = doc(firestore, 'products', selectedProduct.id);
+            updateDocumentNonBlocking(docRef, productData);
+            toast({ title: 'Product Updated' });
+        } else {
+            if (productsCollection) {
+                addDocumentNonBlocking(productsCollection, productData);
+                toast({ title: 'Product Added' });
+            }
+        }
+
+     } catch (error) {
+        console.error("Error uploading files or saving product:", error);
+        toast({
+            variant: "destructive",
+            title: "Operation Failed",
+            description: "Could not upload images or save the product.",
+        });
+     } finally {
+        setIsUploading(false);
+        setIsFormOpen(false);
+     }
   };
   
-  const getImageUrl = (imageUrl: string) => {
+  const getImageUrl = (imageUrl: string | undefined) => {
     if (!imageUrl) return 'https://placehold.co/40x40/f3f4f6/333?text=?';
     return imageUrl.startsWith('http') ? imageUrl : `https://picsum.photos/seed/${imageUrl}/40/40`;
   };
@@ -190,6 +233,15 @@ export default function ProductManager() {
         onSubmit={handleFormSubmit}
         product={selectedProduct}
       />
+
+       {isUploading && (
+        <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
+            <div className="flex items-center space-x-2">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <p className="text-lg">Uploading...</p>
+            </div>
+        </div>
+      )}
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
