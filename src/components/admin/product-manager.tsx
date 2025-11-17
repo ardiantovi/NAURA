@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { MoreHorizontal, PlusCircle, Trash, Edit, Loader2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash, Edit } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +41,6 @@ import { useToast } from '@/hooks/use-toast';
 export default function ProductManager() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
@@ -104,7 +103,6 @@ export default function ProductManager() {
      
      // Perform upload and save in the background
      (async () => {
-        setIsUploading(true);
         try {
             let imageUrls = values.existingImages || [];
             if (values.images && values.images.length > 0) {
@@ -139,8 +137,6 @@ export default function ProductManager() {
                 title: "Operation Failed",
                 description: "Could not upload images or save the product.",
             });
-        } finally {
-            setIsUploading(false);
         }
      })();
   };
@@ -240,15 +236,6 @@ export default function ProductManager() {
         onSubmit={handleFormSubmit}
         product={selectedProduct}
       />
-
-       {isUploading && (
-        <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
-            <div className="flex items-center space-x-2">
-                <Loader2 className="h-8 w-8 animate-spin" />
-                <p className="text-lg">Uploading...</p>
-            </div>
-        </div>
-      )}
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>

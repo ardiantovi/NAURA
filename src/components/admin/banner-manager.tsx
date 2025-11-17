@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { MoreHorizontal, PlusCircle, Trash, Edit, Loader2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash, Edit } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,7 +52,6 @@ interface Banner {
 export default function BannerManager() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [selectedBanner, setSelectedBanner] = useState<Banner | null>(null);
   const [bannerToDelete, setBannerToDelete] = useState<Banner | null>(null);
 
@@ -99,7 +98,6 @@ export default function BannerManager() {
 
     // Perform upload and save in the background
     (async () => {
-        setIsUploading(true);
         try {
             let imageUrl = selectedBanner?.imageUrl || values.imageUrl || '';
 
@@ -140,8 +138,6 @@ export default function BannerManager() {
                 title: "Upload Failed",
                 description: "Could not upload the image or save the banner.",
             });
-        } finally {
-            setIsUploading(false);
         }
     })();
   };
@@ -229,15 +225,6 @@ export default function BannerManager() {
         onSubmit={handleFormSubmit}
         banner={selectedBanner}
       />
-
-      {isUploading && (
-        <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
-            <div className="flex items-center space-x-2">
-                <Loader2 className="h-8 w-8 animate-spin" />
-                <p className="text-lg">Processing...</p>
-            </div>
-        </div>
-      )}
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
