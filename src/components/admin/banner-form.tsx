@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -39,12 +40,12 @@ const formSchema = z.object({
   altText: z.string().min(1, 'Alt text is required'),
   linkUrl: z.string().url('Must be a valid URL'),
   image: z.custom<FileList>()
-    .refine(files => files && files.length === 1, 'An image is required.')
-    .refine(files => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine(files => files === null || files.length === 1, 'An image is required.')
+    .refine(files => files === null || files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
     .refine(
-      files => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+      files => files === null || ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
       '.jpg, .jpeg, .png and .webp files are accepted.'
-    ).optional(),
+    ).nullable().optional(),
 });
 
 export type BannerFormValues = z.infer<typeof formSchema>;
@@ -53,7 +54,7 @@ export type BannerFormValues = z.infer<typeof formSchema>;
 interface BannerFormProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSubmit: (values: BannerFormValues, file?: File) => void;
+  onSubmit: (values: BannerFormValues) => void;
   banner: Banner | null;
 }
 
@@ -62,12 +63,17 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
   const defaultValues = {
     altText: banner?.altText || '',
     linkUrl: banner?.linkUrl || '',
+    image: null,
   };
 
+  const formSchemaWithContext = formSchema.refine(
+    (data) => !!banner || (data.image && data.image.length > 0), {
+    message: "An image is required.",
+    path: ["image"],
+  });
+
   const form = useForm<BannerFormValues>({
-    resolver: zodResolver(formSchema.extend({
-        image: banner ? formSchema.shape.image.optional() : formSchema.shape.image,
-    })),
+    resolver: zodResolver(formSchemaWithContext),
     defaultValues,
   });
 
@@ -75,6 +81,7 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
     form.reset({
         altText: banner?.altText || '',
         linkUrl: banner?.linkUrl || '',
+        image: null
     });
      if (isOpen && fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -82,7 +89,7 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
   }, [banner, isOpen, form]);
 
   const handleSubmit = (values: BannerFormValues) => {
-    onSubmit(values, values.image?.[0]);
+    onSubmit(values);
     form.reset();
   };
 

@@ -108,40 +108,46 @@ export default function BannerManager() {
             'state_changed',
             (snapshot) => {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                update({ progress });
+                update({ id: toastId, progress });
             },
             (error) => {
                 console.error('Upload failed:', error);
-                update({ id: toastId, title: 'Upload Failed', description: error.message, variant: 'destructive' });
+                dismiss(toastId);
+                toast({
+                  title: 'Upload Failed',
+                  description: error.message,
+                  variant: 'destructive',
+                });
                 reject(error);
             },
             async () => {
                 const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                update({ id: toastId, title: 'Upload Successful', progress: 100 });
-                setTimeout(() => dismiss(toastId), 2000);
+                dismiss(toastId);
+                toast({
+                    title: 'Upload Successful',
+                    description: 'Banner image has been uploaded.',
+                    duration: 3000,
+                });
                 resolve(downloadURL);
             }
         );
     });
   };
 
-  const handleFormSubmit = async (values: BannerFormValues, file?: File) => {
+  const handleFormSubmit = async (values: BannerFormValues) => {
     if (!firestore || !bannersCollection) return;
     
     setIsFormOpen(false);
-    let imageUrl = selectedBanner?.imageUrl;
-
+    
     try {
-        if (file) {
-            imageUrl = await uploadImage(file);
-        } else if (!selectedBanner) {
-            toast({ title: 'Error', description: 'An image is required for a new banner.', variant: 'destructive'});
-            return;
-        }
+        let imageUrl: string;
 
-        if (!imageUrl) {
-            // This case should ideally not be hit if logic is correct, but as a safeguard:
-             toast({ title: 'Error', description: 'Image URL is missing.', variant: 'destructive'});
+        if (values.image && values.image.length > 0) {
+            imageUrl = await uploadImage(values.image[0]);
+        } else if (selectedBanner) {
+            imageUrl = selectedBanner.imageUrl;
+        } else {
+            toast({ title: 'Error', description: 'An image is required for a new banner.', variant: 'destructive'});
             return;
         }
 
@@ -164,7 +170,7 @@ export default function BannerManager() {
         }
     } catch(error) {
       console.error("Failed to save banner", error);
-      // The uploadImage function already handles showing an error toast.
+      // Error toast is already handled by the uploadImage function
     }
   };
 

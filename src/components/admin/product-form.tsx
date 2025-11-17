@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -43,12 +44,12 @@ const formSchema = z.object({
   price: z.coerce.number().positive('Price must be positive'),
   brand: z.string().min(1, 'Brand is required'),
   images: z.custom<FileList>()
-    .refine(files => files && files.length > 0, 'At least one image is required.')
-    .refine(files => Array.from(files).every(file => file.size <= MAX_FILE_SIZE), `Max file size is 5MB.`)
+    .refine(files => files === null || (files && files.length > 0), 'At least one image is required.')
+    .refine(files => files === null || Array.from(files).every(file => file.size <= MAX_FILE_SIZE), `Max file size is 5MB.`)
     .refine(
-      files => Array.from(files).every(file => ACCEPTED_IMAGE_TYPES.includes(file.type)),
+      files => files === null || Array.from(files).every(file => ACCEPTED_IMAGE_TYPES.includes(file.type)),
       '.jpg, .jpeg, .png and .webp files are accepted.'
-    ).optional(), // Optional if we are editing and not changing images
+    ).nullable().optional(),
 });
 
 export type ProductFormValues = z.infer<typeof formSchema>;
@@ -57,7 +58,7 @@ export type ProductFormValues = z.infer<typeof formSchema>;
 interface ProductFormProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSubmit: (values: ProductFormValues, files?: FileList) => void;
+  onSubmit: (values: ProductFormValues) => void;
   product: Product | null;
 }
 
@@ -69,13 +70,16 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
     description: product?.description || '',
     price: product?.price || 0,
     brand: product?.brand || '',
+    images: null,
   };
   
+  const formSchemaWithContext = formSchema.refine(data => !!product || (data.images && data.images.length > 0), {
+    message: "At least one image is required.",
+    path: ["images"],
+  });
+
   const form = useForm<ProductFormValues>({
-    resolver: zodResolver(formSchema.extend({
-      // Make images required only when creating a new product
-      images: product ? formSchema.shape.images.optional() : formSchema.shape.images,
-    })),
+    resolver: zodResolver(formSchemaWithContext),
     defaultValues,
   });
 
@@ -85,6 +89,7 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
       description: product?.description || '',
       price: product?.price || 0,
       brand: product?.brand || '',
+      images: null,
     });
     // Reset file input when dialog opens
     if (isOpen && fileInputRef.current) {
@@ -94,7 +99,7 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
 
 
   const handleSubmit = (values: ProductFormValues) => {
-    onSubmit(values, values.images);
+    onSubmit(values);
     form.reset();
   };
 

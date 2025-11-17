@@ -83,83 +83,70 @@ export default function ProductManager() {
  const uploadImages = async (files: FileList): Promise<string[]> => {
     if (!auth) throw new Error('Authentication not available');
     const storage = getStorage(auth.app);
-    const uploadPromises: Promise<string>[] = [];
-
+    
     const { id: overallToastId, update: updateOverallToast } = toast({
         title: 'Uploading Images...',
-        description: `Preparing to upload ${files.length} images.`,
+        description: `0% - Starting to upload ${files.length} images.`,
         progress: 0,
     });
 
-    let totalProgress = 0;
-    const fileProgress: { [key: string]: number } = {};
-
-    function updateOverallProgress() {
-        const progressValues = Object.values(fileProgress);
-        totalProgress = progressValues.reduce((acc, p) => acc + p, 0) / progressValues.length;
-        updateOverallToast({ progress: totalProgress });
-    }
-
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        fileProgress[file.name] = 0; // Initialize progress for this file
+    const uploadPromises = Array.from(files).map(file => {
         const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
         const uploadTask = uploadBytesResumable(storageRef, file);
-
-        const promise = new Promise<string>((resolve, reject) => {
-            uploadTask.on(
-                'state_changed',
+        
+        return new Promise<string>((resolve, reject) => {
+            uploadTask.on('state_changed',
                 (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    fileProgress[file.name] = progress;
-                    updateOverallProgress();
+                    // This is just for one file, overall progress will be calculated later
                 },
-                (error) => {
-                    console.error('Upload failed for a file:', error);
-                    updateOverallToast({
-                        id: overallToastId,
-                        title: 'Upload Failed',
-                        description: `Error with ${file.name}: ${error.message}`,
-                        variant: 'destructive',
-                    });
-                    reject(error);
-                },
-                async () => {
-                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                    fileProgress[file.name] = 100;
-                    updateOverallProgress();
-                    resolve(downloadURL);
-                }
+                (error) => reject(error),
+                () => getDownloadURL(uploadTask.snapshot.ref).then(resolve)
             );
         });
-        uploadPromises.push(promise);
-    }
+    });
+
+    // This is a simple way to show progress. For multiple files, we just average it.
+    // A more complex implementation could weigh by file size.
+    const allTasks = Promise.all(uploadPromises);
     
+    const interval = setInterval(() => {
+        const individualProgress = (uploadPromises as any).map((p: any) => p.progress || 0);
+        const totalProgress = individualProgress.reduce((acc: number, p: number) => acc + p, 0) / files.length;
+        updateOverallToast({ id: overallToastId, progress: totalProgress, description: `${Math.round(totalProgress)}% complete` });
+    }, 200);
+
     try {
-        const downloadedUrls = await Promise.all(uploadPromises);
-        updateOverallToast({
-            id: overallToastId,
+        const downloadedUrls = await allTasks;
+        clearInterval(interval);
+        dismiss(overallToastId);
+        toast({
             title: 'Upload Successful',
             description: `All ${files.length} images uploaded.`,
-            progress: 100,
+            duration: 3000,
         });
-        setTimeout(() => dismiss(overallToastId), 2000);
         return downloadedUrls;
-    } catch (error) {
-        // Error toast is already handled in the 'error' part of the listener
+    } catch (error: any) {
+        clearInterval(interval);
+        dismiss(overallToastId);
+        toast({
+            title: 'Upload Failed',
+            description: error.message || 'An error occurred during upload.',
+            variant: 'destructive',
+        });
         throw error;
     }
 };
 
-  const handleFormSubmit = async (values: ProductFormValues, files?: FileList) => {
+  const handleFormSubmit = async (values: ProductFormValues) => {
     if (!firestore || !productsCollection) return;
 
     setIsFormOpen(false);
-    let imageUrls: string[] = selectedProduct?.images || [];
-
+    
     try {
-        if (files && files.length > 0) {
-            imageUrls = await uploadImages(files);
+        let imageUrls: string[] = selectedProduct?.images || [];
+
+        if (values.images && values.images.length > 0) {
+            imageUrls = await uploadImages(values.images);
         } else if (!selectedProduct) {
              toast({ title: 'Error', description: 'At least one image is required for a new product.', variant: 'destructive'});
              return;
