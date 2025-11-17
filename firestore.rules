@@ -44,29 +44,27 @@ service cloud.firestore {
     /**
      * @description Security rules for the /products collection.
      * @path /products/{productId}
-     * @allow (create, update, delete) An admin user can create, update, and delete product documents.
-     * @deny (create, update, delete) A non-admin user cannot create, update, or delete product documents.
-     * @allow (get, list) An admin user can read product documents.
-     * @deny (get, list) A non-admin user cannot read product documents.
-     * @principle Enforces admin-only access for product management.
+     * @allow write: An admin user can create, update, and delete product documents.
+     * @deny write: A non-admin user cannot create, update, or delete product documents.
+     * @allow read: Any user (authenticated or not) can read product documents.
+     * @principle Enforces admin-only write access for product management, while allowing public read access for the storefront.
      */
     match /products/{productId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow write: if isSignedIn() && isAdmin();
     }
 
     /**
      * @description Security rules for the /banners collection.
      * @path /banners/{bannerId}
-     * @allow (create, update, delete) An admin user can create, update, and delete banner documents.
-     * @deny (create, update, delete) A non-admin user cannot create, update, or delete banner documents.
-     * @allow (get, list) An admin user can read banner documents.
-     * @deny (get, list) A non-admin user cannot read banner documents.
-     * @principle Enforces admin-only access for banner management.
+     * @allow write: An admin user can create, update, and delete banner documents.
+     * @deny write: A non-admin user cannot create, update, or delete banner documents.
+     * @allow read: Any user (authenticated or not) can read banner documents.
+     * @principle Enforces admin-only write access for banner management, while allowing public read access for the storefront.
      */
     match /banners/{bannerId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow write: if isSignedIn() && isAdmin();
     }
 
         /**
