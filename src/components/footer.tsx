@@ -19,7 +19,6 @@ export default function Footer() {
                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                 <MessageCircle className="h-4 w-4" />
-                <span>+{phoneNumber}</span>
             </Link>
             <Link
             href="https://maps.app.goo.gl/GgbWLVomXgASTnu6A"
