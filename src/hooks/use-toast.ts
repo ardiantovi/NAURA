@@ -1,3 +1,4 @@
+
 "use client"
 
 // Inspired by react-hot-toast library
@@ -104,23 +105,6 @@ export const reducer = (state: State, action: Action): State => {
 
     case "DISMISS_TOAST": {
       const { toastId } = action
-
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
-      if (toastId) {
-        const toast = state.toasts.find(t => t.id === toastId);
-        // Do not automatically remove toasts with progress bars
-        if (toast && toast.progress === undefined) {
-            addToRemoveQueue(toastId)
-        }
-      } else {
-        state.toasts.forEach((toast) => {
-           if (toast.progress === undefined) {
-             addToRemoveQueue(toast.id)
-           }
-        })
-      }
-
       return {
         ...state,
         toasts: state.toasts.map((t) =>
@@ -162,22 +146,12 @@ type Toast = Omit<ToasterToast, "id"> & { id?: string }
 
 function toast(props: Toast) {
   const id = props.id || genId()
-
-  const update = (props: ToasterToast) =>
-    dispatch({
-      type: "UPDATE_TOAST",
-      toast: { ...props, id },
-    })
-  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
-
   const isUpdate = memoryState.toasts.some(t => t.id === id);
 
   if (isUpdate) {
-    dispatch({
-      type: "UPDATE_TOAST",
-      toast: { ...props, id },
-    });
+    dispatch({ type: "UPDATE_TOAST", toast: { ...props, id } });
   } else {
+    // This is a new toast
     dispatch({
       type: "ADD_TOAST",
       toast: {
@@ -185,17 +159,22 @@ function toast(props: Toast) {
         id,
         open: true,
         onOpenChange: (open) => {
-          if (!open) dismiss()
+          if (!open) {
+            dispatch({ type: "DISMISS_TOAST", toastId: id });
+          }
         },
       },
     });
+    // Only set a timeout if the toast does NOT have a progress bar
+    if (props.progress === undefined) {
+       addToRemoveQueue(id);
+    }
   }
-
 
   return {
     id: id,
-    dismiss,
-    update,
+    dismiss: () => dispatch({ type: "DISMISS_TOAST", toastId: id }),
+    update: (props: ToasterToast) => dispatch({ type: "UPDATE_TOAST", toast: { ...props, id } }),
   }
 }
 
@@ -215,7 +194,21 @@ function useToast() {
   return {
     ...state,
     toast,
-    dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+    dismiss: (toastId?: string) => {
+        dispatch({ type: "DISMISS_TOAST", toastId });
+        // Immediately remove from queue if manually dismissed
+        if (toastId) {
+            const timeout = toastTimeouts.get(toastId);
+            if (timeout) {
+                clearTimeout(timeout);
+                toastTimeouts.delete(toastId);
+            }
+            // A short delay to allow fade out animation before removing
+            setTimeout(() => {
+                 dispatch({ type: "REMOVE_TOAST", toastId });
+            }, 500);
+        }
+    },
   }
 }
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -57,7 +58,7 @@ export default function BannerManager() {
 
   const firestore = useFirestore();
   const auth = useAuth();
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
 
   const bannersCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'banners') : null),
@@ -95,51 +96,50 @@ export default function BannerManager() {
     
     setIsFormOpen(false);
 
-    (async () => {
-        let imageUrl = selectedBanner?.imageUrl || values.imageUrl || '';
+    if (values.image) {
+        const storage = getStorage();
+        const file = values.image as File;
+        const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+        const toastId = `upload-banner-${Date.now()}`;
 
-        if (values.image) {
-            const storage = getStorage();
-            const file = values.image as File;
-            const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
-            const uploadTask = uploadBytesResumable(storageRef, file);
+        toast({
+            id: toastId,
+            title: 'Uploading image...',
+            description: 'Please wait.',
+            progress: 0,
+        });
 
-            const { id: toastId } = toast({
-                title: 'Uploading image...',
-                description: 'Please wait.',
-                progress: 0,
-            });
-
-            uploadTask.on('state_changed', 
-                (snapshot: UploadTaskSnapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    toast({ id: toastId, progress: progress });
-                },
-                (error) => {
-                    console.error("Upload failed:", error);
-                    toast({
-                        id: toastId,
-                        variant: "destructive",
-                        title: "Upload Failed",
-                        description: "Could not upload the image.",
-                    });
-                },
-                async () => {
-                    imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
-                    toast({ 
-                        id: toastId, 
-                        title: 'Upload successful!', 
-                        description: 'Saving banner data...',
-                        progress: 100
-                    });
-                    
-                    saveBannerData(imageUrl, values);
-                }
-            );
-        } else {
-            saveBannerData(imageUrl, values);
-        }
-    })();
+        uploadTask.on('state_changed', 
+            (snapshot: UploadTaskSnapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                toast({ id: toastId, progress: progress });
+            },
+            (error) => {
+                console.error("Upload failed:", error);
+                toast({
+                    id: toastId,
+                    variant: "destructive",
+                    title: "Upload Failed",
+                    description: "Could not upload the image.",
+                });
+            },
+            async () => {
+                const imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                toast({ 
+                    id: toastId, 
+                    title: 'Upload successful!', 
+                    description: 'Saving banner data...',
+                    progress: 100
+                });
+                
+                saveBannerData(imageUrl, values);
+                setTimeout(() => dismiss(toastId), 1000);
+            }
+        );
+    } else if (selectedBanner) {
+        saveBannerData(selectedBanner.imageUrl, values);
+    }
   };
 
   const saveBannerData = (imageUrl: string, values: BannerFormValues) => {

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -46,7 +47,7 @@ export default function ProductManager() {
 
   const firestore = useFirestore();
   const auth = useAuth();
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
 
   const productsCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'products') : null),
@@ -84,79 +85,94 @@ export default function ProductManager() {
      
      setIsFormOpen(false);
      
-     (async () => {
-        try {
-            let imageUrls = values.existingImages || [];
-            if (values.images && values.images.length > 0) {
-                 const files = values.images as FileList;
-                 const storage = getStorage();
-                 
-                 const { id: toastId } = toast({
-                    title: `Uploading ${files.length} image(s)...`,
-                    description: 'Please wait.',
-                    progress: 0,
-                 });
+     if (!values.images && !values.existingImages?.length) {
+        saveProductData(values, []);
+        return;
+     }
 
-                 const uploadPromises = Array.from(files).map(file => {
-                    const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
-                    const uploadTask = uploadBytesResumable(storageRef, file);
+     const files = values.images as FileList | undefined;
+     if (files && files.length > 0) {
+        const storage = getStorage();
+        const toastId = `upload-${Date.now()}`;
 
-                    return new Promise<string>((resolve, reject) => {
-                        uploadTask.on('state_changed',
-                            (snapshot: UploadTaskSnapshot) => {
-                                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                                // This is progress for a single file, for simplicity we show the latest progress
-                                toast({
-                                  id: toastId,
-                                  title: `Uploading ${file.name}...`,
-                                  progress,
-                                });
-                            },
-                            reject, // Reject promise on error
-                            async () => {
-                                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                                resolve(downloadURL);
-                            }
-                        );
-                    });
-                 });
-                 
-                 imageUrls = await Promise.all(uploadPromises);
+        let totalBytes = 0;
+        Array.from(files).forEach(file => totalBytes += file.size);
+        let totalBytesTransferred = 0;
 
-                 toast({ id: toastId, title: 'Upload complete!', description: 'Saving product data...', progress: 100 });
-            }
+        toast({
+            id: toastId,
+            title: `Uploading ${files.length} image(s)...`,
+            description: 'Please wait.',
+            progress: 0,
+        });
 
-            const productData = {
-              name: values.name,
-              description: values.description,
-              price: values.price,
-              brand: values.brand,
-              images: imageUrls,
-              category: 'Audio', // Default category
-              specs: values.specs || {},
-            };
+        const uploadPromises = Array.from(files).map(file => {
+            const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
+            const uploadTask = uploadBytesResumable(storageRef, file);
 
-            if (selectedProduct) {
-                const docRef = doc(firestore, 'products', selectedProduct.id);
-                updateDocumentNonBlocking(docRef, productData);
-                toast({ title: 'Product Updated Successfully' });
-            } else {
-                if (productsCollection) {
-                    addDocumentNonBlocking(productsCollection, productData);
-                    toast({ title: 'Product Added Successfully' });
-                }
-            }
+            return new Promise<string>((resolve, reject) => {
+                uploadTask.on('state_changed',
+                    (snapshot: UploadTaskSnapshot) => {
+                        // This logic is tricky for multiple files, we'll sum up the progress
+                    },
+                    reject,
+                    async () => {
+                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                        totalBytesTransferred += file.size;
+                        const progress = (totalBytesTransferred / totalBytes) * 100;
+                        
+                        toast({
+                            id: toastId,
+                            title: `Uploading ${files.length} image(s)...`,
+                            progress,
+                        });
 
-        } catch (error) {
-            console.error("Error uploading files or saving product:", error);
-            toast({
-                variant: "destructive",
-                title: "Operation Failed",
-                description: "Could not upload images or save the product.",
+                        resolve(downloadURL);
+                    }
+                );
             });
-        }
-     })();
+        });
+        
+        Promise.all(uploadPromises).then(imageUrls => {
+            toast({ id: toastId, title: 'Upload complete!', description: 'Saving product data...', progress: 100 });
+            saveProductData(values, imageUrls);
+             setTimeout(() => dismiss(toastId), 1000);
+        }).catch(error => {
+            console.error("Error uploading files:", error);
+            toast({
+                id: toastId,
+                variant: "destructive",
+                title: "Upload Failed",
+                description: "Could not upload images.",
+            });
+        });
+     } else {
+         saveProductData(values, values.existingImages || []);
+     }
   };
+
+  const saveProductData = (values: ProductFormValues, imageUrls: string[]) => {
+      if (!firestore || !productsCollection) return;
+
+      const productData = {
+        name: values.name,
+        description: values.description,
+        price: values.price,
+        brand: values.brand,
+        images: imageUrls,
+        category: 'Audio', // Default category
+        specs: selectedProduct?.specs || {},
+      };
+
+      if (selectedProduct) {
+          const docRef = doc(firestore, 'products', selectedProduct.id);
+          updateDocumentNonBlocking(docRef, productData);
+          toast({ title: 'Product Updated Successfully' });
+      } else {
+          addDocumentNonBlocking(productsCollection, productData);
+          toast({ title: 'Product Added Successfully' });
+      }
+  }
   
   const getImageUrl = (imageUrl: string | undefined) => {
     if (!imageUrl) return 'https://placehold.co/40x40/f3f4f6/333?text=?';
