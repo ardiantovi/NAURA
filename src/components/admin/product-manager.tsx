@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, doc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, UploadTaskSnapshot } from 'firebase/storage';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -79,35 +79,50 @@ export default function ProductManager() {
     setProductToDelete(null);
   };
 
-  const uploadImages = async (files: FileList): Promise<string[]> => {
-    const storage = getStorage();
-    toast({ title: `Uploading ${files.length} images...`, description: 'Please wait.' });
-
-    const uploadPromises = Array.from(files).map(async (file) => {
-      const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      return getDownloadURL(snapshot.ref);
-    });
-
-    const imageUrls = await Promise.all(uploadPromises);
-    
-    toast({ title: 'Upload successful!', description: `${files.length} images are now available.` });
-    return imageUrls;
-  };
-
   const handleFormSubmit = (values: ProductFormValues) => {
      if (!firestore || !auth) return;
      
-     // Close the form immediately
      setIsFormOpen(false);
      
-     // Perform upload and save in the background
      (async () => {
         try {
             let imageUrls = values.existingImages || [];
             if (values.images && values.images.length > 0) {
-                // The uploadImages function already provides toast feedback
-                imageUrls = await uploadImages(values.images as FileList);
+                 const files = values.images as FileList;
+                 const storage = getStorage();
+                 const totalSize = Array.from(files).reduce((acc, file) => acc + file.size, 0);
+                 let uploadedSize = 0;
+
+                 const { id: toastId } = toast({
+                    title: `Uploading ${files.length} images...`,
+                    description: 'Please wait.',
+                    progress: 0,
+                 });
+
+                 const uploadPromises = Array.from(files).map(file => {
+                    const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
+                    const uploadTask = uploadBytesResumable(storageRef, file);
+
+                    return new Promise<string>((resolve, reject) => {
+                        uploadTask.on('state_changed',
+                            (snapshot: UploadTaskSnapshot) => {
+                                // This snapshot is for a single file, we need to calculate total progress
+                            },
+                            reject, // Reject promise on error
+                            async () => {
+                                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                                uploadedSize += uploadTask.snapshot.totalBytes;
+                                const totalProgress = (uploadedSize / totalSize) * 100;
+                                toast({ id: toastId, progress: totalProgress });
+                                resolve(downloadURL);
+                            }
+                        );
+                    });
+                 });
+                 
+                 imageUrls = await Promise.all(uploadPromises);
+
+                 toast({ id: toastId, title: 'Upload complete!', description: 'Saving product data...', progress: 100 });
             }
 
             const productData = {
@@ -117,6 +132,7 @@ export default function ProductManager() {
               brand: values.brand,
               images: imageUrls,
               category: 'Audio', // Default category
+              specs: values.specs || {},
             };
 
             if (selectedProduct) {

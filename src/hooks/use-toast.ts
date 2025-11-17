@@ -8,14 +8,15 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 3
+const TOAST_REMOVE_DELAY = 10000
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
-  action?: ToastActionElement
+  action?: ToastActionElement,
+  progress?: number
 }
 
 const actionTypes = {
@@ -83,6 +84,17 @@ export const reducer = (state: State, action: Action): State => {
       }
 
     case "UPDATE_TOAST":
+      // If the toast is not in the list, add it.
+      if (action.toast.id && !state.toasts.some(t => t.id === action.toast.id)) {
+        const newToast: ToasterToast = {
+          id: action.toast.id,
+          ...action.toast
+        }
+        return {
+          ...state,
+          toasts: [newToast, ...state.toasts].slice(0, TOAST_LIMIT),
+        }
+      }
       return {
         ...state,
         toasts: state.toasts.map((t) =>
@@ -140,10 +152,10 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, "id">
+type Toast = Omit<ToasterToast, "id"> & { id?: string }
 
-function toast({ ...props }: Toast) {
-  const id = genId()
+function toast(props: Toast) {
+  const id = props.id || genId()
 
   const update = (props: ToasterToast) =>
     dispatch({
@@ -152,8 +164,10 @@ function toast({ ...props }: Toast) {
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
 
+  const actionType = props.id ? 'UPDATE_TOAST' : 'ADD_TOAST';
+
   dispatch({
-    type: "ADD_TOAST",
+    type: actionType,
     toast: {
       ...props,
       id,

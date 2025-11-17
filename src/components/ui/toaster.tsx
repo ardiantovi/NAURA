@@ -9,19 +9,23 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast"
+import { Progress } from "./progress"
 
 export function Toaster() {
   const { toasts } = useToast()
 
   return (
     <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
+      {toasts.map(function ({ id, title, description, action, progress, ...props }) {
         return (
           <Toast key={id} {...props}>
-            <div className="grid gap-1">
+            <div className="grid gap-1 w-full">
               {title && <ToastTitle>{title}</ToastTitle>}
               {description && (
                 <ToastDescription>{description}</ToastDescription>
+              )}
+               {progress !== undefined && (
+                <Progress value={progress} className="mt-2" />
               )}
             </div>
             {action}

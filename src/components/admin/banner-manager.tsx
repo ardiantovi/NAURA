@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, doc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, UploadTaskSnapshot } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -93,54 +93,77 @@ export default function BannerManager() {
   const handleFormSubmit = (values: BannerFormValues) => {
     if (!firestore || !auth) return;
     
-    // Close the form immediately
     setIsFormOpen(false);
 
-    // Perform upload and save in the background
     (async () => {
-        try {
-            let imageUrl = selectedBanner?.imageUrl || values.imageUrl || '';
+        let imageUrl = selectedBanner?.imageUrl || values.imageUrl || '';
 
-            if (values.image) {
-                const storage = getStorage();
-                const file = values.image as File;
-                const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
-                
-                toast({ title: 'Uploading image...', description: 'Please wait.' });
-                const snapshot = await uploadBytes(storageRef, file);
-                imageUrl = await getDownloadURL(snapshot.ref);
-                toast({ title: 'Upload successful!', description: 'Image is now available.' });
-            }
+        if (values.image) {
+            const storage = getStorage();
+            const file = values.image as File;
+            const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
+            const uploadTask = uploadBytesResumable(storageRef, file);
 
-            const bannerData = {
-                altText: values.altText,
-                linkUrl: values.linkUrl,
-                imageUrl: imageUrl,
-                startDate: selectedBanner?.startDate || new Date().toISOString(),
-                endDate: selectedBanner?.endDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(), // 1 year from now
-                priority: selectedBanner?.priority || 0,
-            };
-
-            if (selectedBanner) {
-                const docRef = doc(firestore, 'banners', selectedBanner.id);
-                updateDocumentNonBlocking(docRef, bannerData);
-                toast({ title: 'Banner Updated' });
-            } else {
-                if (bannersCollection) {
-                    addDocumentNonBlocking(bannersCollection, bannerData);
-                    toast({ title: 'Banner Added' });
-                }
-            }
-        } catch (error) {
-            console.error("Error uploading file or saving banner:", error);
-            toast({
-                variant: "destructive",
-                title: "Upload Failed",
-                description: "Could not upload the image or save the banner.",
+            const { id: toastId } = toast({
+                title: 'Uploading image...',
+                description: 'Please wait.',
+                progress: 0,
             });
+
+            uploadTask.on('state_changed', 
+                (snapshot: UploadTaskSnapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    toast({ id: toastId, progress: progress });
+                },
+                (error) => {
+                    console.error("Upload failed:", error);
+                    toast({
+                        id: toastId,
+                        variant: "destructive",
+                        title: "Upload Failed",
+                        description: "Could not upload the image.",
+                    });
+                },
+                async () => {
+                    imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                    toast({ 
+                        id: toastId, 
+                        title: 'Upload successful!', 
+                        description: 'Saving banner data...',
+                        progress: 100
+                    });
+                    
+                    saveBannerData(imageUrl, values);
+                }
+            );
+        } else {
+            saveBannerData(imageUrl, values);
         }
     })();
   };
+
+  const saveBannerData = (imageUrl: string, values: BannerFormValues) => {
+      if (!firestore || !bannersCollection) return;
+
+      const bannerData = {
+          altText: values.altText,
+          linkUrl: values.linkUrl,
+          imageUrl: imageUrl,
+          startDate: selectedBanner?.startDate || new Date().toISOString(),
+          endDate: selectedBanner?.endDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(), // 1 year from now
+          priority: selectedBanner?.priority || 0,
+      };
+
+      if (selectedBanner) {
+          const docRef = doc(firestore, 'banners', selectedBanner.id);
+          updateDocumentNonBlocking(docRef, bannerData);
+          toast({ title: 'Banner Updated' });
+      } else {
+          addDocumentNonBlocking(bannersCollection, bannerData);
+          toast({ title: 'Banner Added' });
+      }
+  }
+
 
   const getImageUrl = (imageUrl: string) => {
     if (!imageUrl) return 'https://placehold.co/80x40/f3f4f6/333?text=?';
