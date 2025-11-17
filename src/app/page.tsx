@@ -24,7 +24,7 @@ export default function Home() {
             <Card className="w-full max-w-sm aspect-square overflow-hidden rounded-3xl shadow-2xl hover:shadow-primary/20 transition-shadow duration-300">
               <CardContent className="p-0 flex items-center justify-center h-full">
                 <Image
-                  src="https://picsum.photos/seed/naura-logo/400/400"
+                  src="https://image2url.com/images/1763362625936-b9cad852-d8c8-4257-80b4-788574a96880.jpeg"
                   alt="Naura Electronic Logo"
                   width={400}
                   height={400}
@@ -42,7 +42,7 @@ export default function Home() {
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full h-16 text-xl justify-between fade-in-up"
+                className="w-full h-16 text-xl uppercase justify-between fade-in-up"
                 style={{ animationDelay: '300ms' }}
               >
                 PRODUK
