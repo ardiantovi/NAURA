@@ -9,6 +9,7 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 3;
+const TOAST_REMOVE_DELAY = 1000;
 
 type ToasterToast = ToastProps & {
   id: string
@@ -56,6 +57,24 @@ interface State {
   toasts: ToasterToast[]
 }
 
+const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
+
+const addToRemoveQueue = (toastId: string) => {
+  if (toastTimeouts.has(toastId)) {
+    return
+  }
+
+  const timeout = setTimeout(() => {
+    toastTimeouts.delete(toastId)
+    dispatch({
+      type: "REMOVE_TOAST",
+      toastId: toastId,
+    })
+  }, TOAST_REMOVE_DELAY)
+
+  toastTimeouts.set(toastId, timeout)
+}
+
 const listeners: Array<(state: State) => void> = []
 
 let memoryState: State = { toasts: [] }
@@ -86,10 +105,21 @@ const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
+      // Can't dismiss if no toast has been defined
+      if (!toastId) {
+        return {
+          ...state,
+          toasts: state.toasts.map((t) => ({
+            ...t,
+            open: false,
+          })),
+        }
+      }
+
       return {
         ...state,
         toasts: state.toasts.map((t) =>
-          t.id === toastId || toastId === undefined
+          t.id === toastId
             ? {
                 ...t,
                 open: false,
@@ -123,10 +153,6 @@ function toast(props: Toast) {
   };
   const dismiss = () => {
     dispatch({ type: 'DISMISS_TOAST', toastId: id });
-    // Allows toast to animate out before removing
-    setTimeout(() => {
-        dispatch({ type: 'REMOVE_TOAST', toastId: id });
-    }, 1000); 
   };
 
   dispatch({
@@ -165,10 +191,7 @@ function useToast() {
     ...state,
     toast,
     dismiss: (toastId?: string) => {
-        dispatch({ type: "DISMISS_TOAST", toastId });
-        setTimeout(() => {
-            dispatch({ type: "REMOVE_TOAST", toastId });
-        }, 1000);
+      dispatch({ type: "DISMISS_TOAST", toastId })
     },
   }
 }

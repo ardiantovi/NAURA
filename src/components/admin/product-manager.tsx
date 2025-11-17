@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, doc, writeBatch } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,7 @@ export default function ProductManager() {
 
   const firestore = useFirestore();
   const auth = useAuth();
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
 
   const productsCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'products') : null),
@@ -83,17 +83,26 @@ export default function ProductManager() {
  const uploadImages = async (files: FileList): Promise<string[]> => {
     if (!auth) throw new Error('Authentication not available');
     const storage = getStorage(auth.app);
-    const urls: string[] = [];
     const uploadPromises: Promise<string>[] = [];
 
-    const { id: toastId, update } = toast({
-      title: 'Uploading Images...',
-      description: `Starting upload for ${files.length} images.`,
-      progress: 0,
+    const { id: overallToastId, update: updateOverallToast } = toast({
+        title: 'Uploading Images...',
+        description: `Preparing to upload ${files.length} images.`,
+        progress: 0,
     });
+
+    let totalProgress = 0;
+    const fileProgress: { [key: string]: number } = {};
+
+    function updateOverallProgress() {
+        const progressValues = Object.values(fileProgress);
+        totalProgress = progressValues.reduce((acc, p) => acc + p, 0) / progressValues.length;
+        updateOverallToast({ progress: totalProgress });
+    }
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        fileProgress[file.name] = 0; // Initialize progress for this file
         const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
         const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -101,20 +110,24 @@ export default function ProductManager() {
             uploadTask.on(
                 'state_changed',
                 (snapshot) => {
-                    // Overall progress calculation could be complex. 
-                    // This just shows the progress of the last started upload.
                     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    update({
-                        description: `Uploading ${file.name}...`,
-                        progress: progress
-                    });
+                    fileProgress[file.name] = progress;
+                    updateOverallProgress();
                 },
                 (error) => {
                     console.error('Upload failed for a file:', error);
+                    updateOverallToast({
+                        id: overallToastId,
+                        title: 'Upload Failed',
+                        description: `Error with ${file.name}: ${error.message}`,
+                        variant: 'destructive',
+                    });
                     reject(error);
                 },
                 async () => {
                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                    fileProgress[file.name] = 100;
+                    updateOverallProgress();
                     resolve(downloadURL);
                 }
             );
@@ -124,19 +137,16 @@ export default function ProductManager() {
     
     try {
         const downloadedUrls = await Promise.all(uploadPromises);
-        update({
+        updateOverallToast({
+            id: overallToastId,
             title: 'Upload Successful',
             description: `All ${files.length} images uploaded.`,
             progress: 100,
         });
-        setTimeout(() => update({ open: false }), 2000); // Dismiss after 2s
+        setTimeout(() => dismiss(overallToastId), 2000);
         return downloadedUrls;
     } catch (error) {
-        update({
-            title: 'Upload Failed',
-            description: 'One or more images failed to upload.',
-            variant: 'destructive'
-        });
+        // Error toast is already handled in the 'error' part of the listener
         throw error;
     }
 };
@@ -150,6 +160,9 @@ export default function ProductManager() {
     try {
         if (files && files.length > 0) {
             imageUrls = await uploadImages(files);
+        } else if (!selectedProduct) {
+             toast({ title: 'Error', description: 'At least one image is required for a new product.', variant: 'destructive'});
+             return;
         }
 
         const productData = {

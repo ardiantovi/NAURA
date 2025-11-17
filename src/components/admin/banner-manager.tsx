@@ -58,7 +58,7 @@ export default function BannerManager() {
 
   const firestore = useFirestore();
   const auth = useAuth();
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
 
   const bannersCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'banners') : null),
@@ -112,13 +112,13 @@ export default function BannerManager() {
             },
             (error) => {
                 console.error('Upload failed:', error);
-                update({ title: 'Upload Failed', description: error.message, variant: 'destructive' });
+                update({ id: toastId, title: 'Upload Failed', description: error.message, variant: 'destructive' });
                 reject(error);
             },
             async () => {
                 const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                update({ title: 'Upload Successful', progress: 100 });
-                setTimeout(() => update({ open: false }), 2000);
+                update({ id: toastId, title: 'Upload Successful', progress: 100 });
+                setTimeout(() => dismiss(toastId), 2000);
                 resolve(downloadURL);
             }
         );
@@ -134,10 +134,14 @@ export default function BannerManager() {
     try {
         if (file) {
             imageUrl = await uploadImage(file);
+        } else if (!selectedBanner) {
+            toast({ title: 'Error', description: 'An image is required for a new banner.', variant: 'destructive'});
+            return;
         }
 
         if (!imageUrl) {
-            toast({ title: 'Error', description: 'An image is required.', variant: 'destructive'});
+            // This case should ideally not be hit if logic is correct, but as a safeguard:
+             toast({ title: 'Error', description: 'Image URL is missing.', variant: 'destructive'});
             return;
         }
 
@@ -160,7 +164,7 @@ export default function BannerManager() {
         }
     } catch(error) {
       console.error("Failed to save banner", error);
-      // toast is handled in uploadImage
+      // The uploadImage function already handles showing an error toast.
     }
   };
 
