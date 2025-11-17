@@ -170,10 +170,10 @@ function toast(props: Toast) {
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
 
-  const actionType = props.id && memoryState.toasts.some(t => t.id === props.id) ? 'UPDATE_TOAST' : 'ADD_TOAST';
+  const isUpdate = memoryState.toasts.some(t => t.id === id);
 
   dispatch({
-    type: actionType,
+    type: isUpdate ? "UPDATE_TOAST" : "ADD_TOAST",
     toast: {
       ...props,
       id,
