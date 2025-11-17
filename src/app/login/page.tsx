@@ -55,14 +55,26 @@ export default function LoginPage() {
         router.push('/admin');
     } catch (err: any) {
         if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-            // If user does not exist, create a new one
+            // User does not exist, so we will create a new one as an admin.
             try {
                 const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const newUser = userCredential.user;
-                // After creating the user, grant them the admin role and WAIT for it to complete.
+                
+                // IMPORTANT: Grant the admin role and WAIT for it to complete.
                 await grantAdminRole(newUser.uid);
-                toast({ title: "Admin account created and logged in!" });
-                router.push('/admin');
+                
+                // CRITICAL FIX: Do NOT log the user in automatically.
+                // Instead, inform them that the account is created and they must log in again.
+                // This forces a token refresh which correctly reflects their new admin status.
+                toast({ 
+                    title: "Admin Account Created!",
+                    description: "Please log in with your new credentials.",
+                    duration: 5000,
+                });
+                
+                // Clear the password field for security
+                setPassword('');
+
             } catch (createErr: any) {
                 const errorMessage = createErr.message || "Failed to create account.";
                 setError(errorMessage);
@@ -108,7 +120,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle>Admin Login</CardTitle>
-            <CardDescription>Enter your credentials to access the admin panel.</CardDescription>
+            <CardDescription>Enter your credentials to access the admin panel. The first account created will be an admin.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -135,7 +147,7 @@ export default function LoginPage() {
               </div>
               {error && <p className="text-destructive text-sm">{error}</p>}
               <Button type="submit" className="w-full">
-                Login
+                Login or Create Admin
               </Button>
             </form>
           </CardContent>
