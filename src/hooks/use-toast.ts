@@ -172,17 +172,25 @@ function toast(props: Toast) {
 
   const isUpdate = memoryState.toasts.some(t => t.id === id);
 
-  dispatch({
-    type: isUpdate ? "UPDATE_TOAST" : "ADD_TOAST",
-    toast: {
-      ...props,
-      id,
-      open: true,
-      onOpenChange: (open) => {
-        if (!open) dismiss()
+  if (isUpdate) {
+    dispatch({
+      type: "UPDATE_TOAST",
+      toast: { ...props, id },
+    });
+  } else {
+    dispatch({
+      type: "ADD_TOAST",
+      toast: {
+        ...props,
+        id,
+        open: true,
+        onOpenChange: (open) => {
+          if (!open) dismiss()
+        },
       },
-    },
-  })
+    });
+  }
+
 
   return {
     id: id,
