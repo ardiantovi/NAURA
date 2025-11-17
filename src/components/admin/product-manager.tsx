@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, doc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -80,54 +80,28 @@ export default function ProductManager() {
     setProductToDelete(null);
   };
 
- const uploadImages = async (files: FileList): Promise<string[]> => {
+  const uploadImages = async (files: FileList): Promise<string[]> => {
     if (!auth) throw new Error('Authentication not available');
     const storage = getStorage(auth.app);
     
-    const { id: overallToastId, update: updateOverallToast } = toast({
-        title: 'Uploading Images...',
-        description: `Starting to upload ${files.length} images.`,
-    });
-
-    const uploadPromises = Array.from(files).map(file => {
+    const uploadPromises = Array.from(files).map(async file => {
         const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-        
-        return new Promise<string>((resolve, reject) => {
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    // Overall progress is handled outside this individual promise
-                },
-                (error) => reject(error),
-                () => getDownloadURL(uploadTask.snapshot.ref).then(resolve)
-            );
-        });
+        await uploadBytes(storageRef, file);
+        return getDownloadURL(storageRef);
     });
 
-    try {
-        const downloadedUrls = await Promise.all(uploadPromises);
-        dismiss(overallToastId);
-        toast({
-            title: 'Upload Successful',
-            description: `All ${files.length} images uploaded.`,
-            duration: 3000,
-        });
-        return downloadedUrls;
-    } catch (error: any) {
-        dismiss(overallToastId);
-        toast({
-            title: 'Upload Failed',
-            description: error.message || 'An error occurred during upload.',
-            variant: 'destructive',
-        });
-        throw error;
-    }
-};
+    return Promise.all(uploadPromises);
+  };
 
   const handleFormSubmit = async (values: ProductFormValues) => {
     if (!firestore || !productsCollection) return;
 
     setIsFormOpen(false);
+
+    const { id: toastId } = toast({
+      title: 'Saving product...',
+      description: 'Your product data is being saved.',
+    });
     
     try {
         let imageUrls: string[] = selectedProduct?.images || [];
@@ -136,6 +110,7 @@ export default function ProductManager() {
             imageUrls = await uploadImages(values.images);
         } else if (!selectedProduct) {
              toast({ title: 'Error', description: 'At least one image is required for a new product.', variant: 'destructive'});
+             dismiss(toastId);
              return;
         }
 
@@ -157,9 +132,15 @@ export default function ProductManager() {
             addDocumentNonBlocking(productsCollection, productData);
             toast({ title: 'Product Added Successfully' });
         }
-    } catch (error) {
+        dismiss(toastId);
+    } catch (error: any) {
         console.error("Failed to save product:", error);
-        // The uploadImages function already shows a toast on failure.
+        toast({
+          title: 'Save Failed',
+          description: error.message || 'An unknown error occurred.',
+          variant: 'destructive',
+        });
+        dismiss(toastId);
     }
   };
   
@@ -255,7 +236,7 @@ export default function ProductManager() {
       <ProductForm
         isOpen={isFormOpen}
         onOpenChange={setIsFormOpen}
-        onSubmit={handleFormSubmit}
+        onSubmit={handleFormSumbit}
         product={selectedProduct}
       />
 

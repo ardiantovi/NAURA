@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, doc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -91,47 +91,14 @@ export default function BannerManager() {
     setBannerToDelete(null);
   };
 
-  const uploadImage = (file: File): Promise<string> => {
+  const uploadImage = async (file: File): Promise<string> => {
     if (!auth) throw new Error('Authentication not available');
     const storage = getStorage(auth.app);
     const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    const { id: toastId, update } = toast({
-      title: 'Uploading Banner...',
-      description: 'Your banner is being uploaded.',
-      progress: 0,
-    });
-
-    return new Promise((resolve, reject) => {
-        uploadTask.on(
-            'state_changed',
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                update({ id: toastId, progress });
-            },
-            (error) => {
-                console.error('Upload failed:', error);
-                dismiss(toastId);
-                toast({
-                  title: 'Upload Failed',
-                  description: error.message,
-                  variant: 'destructive',
-                });
-                reject(error);
-            },
-            async () => {
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                dismiss(toastId);
-                toast({
-                    title: 'Upload Successful',
-                    description: 'Banner image has been uploaded.',
-                    duration: 3000,
-                });
-                resolve(downloadURL);
-            }
-        );
-    });
+    
+    await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(storageRef);
+    return downloadURL;
   };
 
   const handleFormSubmit = async (values: BannerFormValues) => {
@@ -139,6 +106,11 @@ export default function BannerManager() {
     
     setIsFormOpen(false);
     
+    const { id: toastId } = toast({
+        title: 'Saving banner...',
+        description: 'Your banner is being saved.',
+    });
+
     try {
         let imageUrl: string;
 
@@ -148,6 +120,7 @@ export default function BannerManager() {
             imageUrl = selectedBanner.imageUrl;
         } else {
             toast({ title: 'Error', description: 'An image is required for a new banner.', variant: 'destructive'});
+            dismiss(toastId);
             return;
         }
 
@@ -168,9 +141,16 @@ export default function BannerManager() {
             addDocumentNonBlocking(bannersCollection, bannerData);
             toast({ title: 'Banner Added' });
         }
-    } catch(error) {
+        dismiss(toastId);
+
+    } catch(error: any) {
       console.error("Failed to save banner", error);
-      // Error toast is already handled by the uploadImage function
+      toast({
+        title: 'Save Failed',
+        description: error.message || 'An unknown error occurred.',
+        variant: 'destructive',
+      });
+      dismiss(toastId);
     }
   };
 
