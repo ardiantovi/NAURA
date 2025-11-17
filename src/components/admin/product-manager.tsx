@@ -74,6 +74,7 @@ export default function ProductManager() {
     if (productToDelete && firestore) {
       const docRef = doc(firestore, 'products', productToDelete.id);
       deleteDocumentNonBlocking(docRef);
+      toast({ title: 'Product Deleted' });
     }
     setIsAlertOpen(false);
     setProductToDelete(null);
@@ -95,47 +96,53 @@ export default function ProductManager() {
     return imageUrls;
   };
 
-  const handleFormSubmit = async (values: ProductFormValues) => {
+  const handleFormSubmit = (values: ProductFormValues) => {
      if (!firestore || !auth) return;
-     setIsUploading(true);
-
-     try {
-        let imageUrls = values.existingImages || [];
-        if (values.images && values.images.length > 0) {
-            imageUrls = await uploadImages(values.images as FileList);
-        }
-
-        const productData = {
-          name: values.name,
-          description: values.description,
-          price: values.price,
-          brand: values.brand,
-          images: imageUrls,
-          category: 'Audio', // Default category
-        };
-
-        if (selectedProduct) {
-            const docRef = doc(firestore, 'products', selectedProduct.id);
-            updateDocumentNonBlocking(docRef, productData);
-            toast({ title: 'Product Updated' });
-        } else {
-            if (productsCollection) {
-                addDocumentNonBlocking(productsCollection, productData);
-                toast({ title: 'Product Added' });
+     
+     // Close the form immediately
+     setIsFormOpen(false);
+     
+     // Perform upload and save in the background
+     (async () => {
+        setIsUploading(true);
+        try {
+            let imageUrls = values.existingImages || [];
+            if (values.images && values.images.length > 0) {
+                // The uploadImages function already provides toast feedback
+                imageUrls = await uploadImages(values.images as FileList);
             }
-        }
 
-     } catch (error) {
-        console.error("Error uploading files or saving product:", error);
-        toast({
-            variant: "destructive",
-            title: "Operation Failed",
-            description: "Could not upload images or save the product.",
-        });
-     } finally {
-        setIsUploading(false);
-        setIsFormOpen(false);
-     }
+            const productData = {
+              name: values.name,
+              description: values.description,
+              price: values.price,
+              brand: values.brand,
+              images: imageUrls,
+              category: 'Audio', // Default category
+            };
+
+            if (selectedProduct) {
+                const docRef = doc(firestore, 'products', selectedProduct.id);
+                updateDocumentNonBlocking(docRef, productData);
+                toast({ title: 'Product Updated Successfully' });
+            } else {
+                if (productsCollection) {
+                    addDocumentNonBlocking(productsCollection, productData);
+                    toast({ title: 'Product Added Successfully' });
+                }
+            }
+
+        } catch (error) {
+            console.error("Error uploading files or saving product:", error);
+            toast({
+                variant: "destructive",
+                title: "Operation Failed",
+                description: "Could not upload images or save the product.",
+            });
+        } finally {
+            setIsUploading(false);
+        }
+     })();
   };
   
   const getImageUrl = (imageUrl: string | undefined) => {

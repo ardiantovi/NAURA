@@ -44,6 +44,9 @@ interface Banner {
   imageUrl: string;
   altText: string;
   linkUrl: string;
+  startDate?: string;
+  endDate?: string;
+  priority?: number;
 }
 
 export default function BannerManager() {
@@ -82,59 +85,65 @@ export default function BannerManager() {
     if (bannerToDelete && firestore) {
       const docRef = doc(firestore, 'banners', bannerToDelete.id);
       deleteDocumentNonBlocking(docRef);
+      toast({ title: 'Banner Deleted' });
     }
     setIsAlertOpen(false);
     setBannerToDelete(null);
   };
 
-  const handleFormSubmit = async (values: BannerFormValues) => {
+  const handleFormSubmit = (values: BannerFormValues) => {
     if (!firestore || !auth) return;
-    setIsUploading(true);
+    
+    // Close the form immediately
+    setIsFormOpen(false);
 
-    let imageUrl = selectedBanner?.imageUrl || '';
+    // Perform upload and save in the background
+    (async () => {
+        setIsUploading(true);
+        try {
+            let imageUrl = selectedBanner?.imageUrl || values.imageUrl || '';
 
-    try {
-        if (values.image) {
-            const storage = getStorage();
-            const file = values.image as File;
-            const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
-            
-            toast({ title: 'Uploading image...', description: 'Please wait.' });
-            const snapshot = await uploadBytes(storageRef, file);
-            imageUrl = await getDownloadURL(snapshot.ref);
-            toast({ title: 'Upload successful!', description: 'Image is now available.' });
-        }
-
-        const bannerData = {
-            altText: values.altText,
-            linkUrl: values.linkUrl,
-            imageUrl: imageUrl,
-            startDate: selectedBanner?.startDate || new Date().toISOString(),
-            endDate: selectedBanner?.endDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(), // 1 year from now
-            priority: selectedBanner?.priority || 0,
-        };
-
-        if (selectedBanner) {
-            const docRef = doc(firestore, 'banners', selectedBanner.id);
-            updateDocumentNonBlocking(docRef, bannerData);
-            toast({ title: 'Banner Updated' });
-        } else {
-            if (bannersCollection) {
-                addDocumentNonBlocking(bannersCollection, bannerData);
-                toast({ title: 'Banner Added' });
+            if (values.image) {
+                const storage = getStorage();
+                const file = values.image as File;
+                const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
+                
+                toast({ title: 'Uploading image...', description: 'Please wait.' });
+                const snapshot = await uploadBytes(storageRef, file);
+                imageUrl = await getDownloadURL(snapshot.ref);
+                toast({ title: 'Upload successful!', description: 'Image is now available.' });
             }
+
+            const bannerData = {
+                altText: values.altText,
+                linkUrl: values.linkUrl,
+                imageUrl: imageUrl,
+                startDate: selectedBanner?.startDate || new Date().toISOString(),
+                endDate: selectedBanner?.endDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(), // 1 year from now
+                priority: selectedBanner?.priority || 0,
+            };
+
+            if (selectedBanner) {
+                const docRef = doc(firestore, 'banners', selectedBanner.id);
+                updateDocumentNonBlocking(docRef, bannerData);
+                toast({ title: 'Banner Updated' });
+            } else {
+                if (bannersCollection) {
+                    addDocumentNonBlocking(bannersCollection, bannerData);
+                    toast({ title: 'Banner Added' });
+                }
+            }
+        } catch (error) {
+            console.error("Error uploading file or saving banner:", error);
+            toast({
+                variant: "destructive",
+                title: "Upload Failed",
+                description: "Could not upload the image or save the banner.",
+            });
+        } finally {
+            setIsUploading(false);
         }
-    } catch (error) {
-        console.error("Error uploading file or saving banner:", error);
-        toast({
-            variant: "destructive",
-            title: "Upload Failed",
-            description: "Could not upload the image or save the banner.",
-        });
-    } finally {
-        setIsUploading(false);
-        setIsFormOpen(false);
-    }
+    })();
   };
 
   const getImageUrl = (imageUrl: string) => {
@@ -225,7 +234,7 @@ export default function BannerManager() {
         <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
             <div className="flex items-center space-x-2">
                 <Loader2 className="h-8 w-8 animate-spin" />
-                <p className="text-lg">Uploading image...</p>
+                <p className="text-lg">Processing...</p>
             </div>
         </div>
       )}
