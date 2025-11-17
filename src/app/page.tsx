@@ -24,6 +24,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
 
 interface Banner {
   id: string;
@@ -35,11 +43,18 @@ interface Banner {
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   const plugin = useRef<any>(null);
 
   useEffect(() => {
     plugin.current = Autoplay({ delay: 5000, stopOnInteraction: true });
+
+    const hasVisited = sessionStorage.getItem('hasVisitedNaura');
+    if (!hasVisited) {
+      setShowWelcomeModal(true);
+      sessionStorage.setItem('hasVisitedNaura', 'true');
+    }
   }, []);
 
   const firestore = useFirestore();
@@ -72,6 +87,18 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
+
+      <AlertDialog open={showWelcomeModal} onOpenChange={setShowWelcomeModal}>
+        <AlertDialogContent className="max-w-md text-center">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-bold font-headline tracking-wider">
+              WELCOME TO NAURA ELECTRONIC
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogAction>Continue</AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <main className="flex-grow container mx-auto px-4 py-8">
         {/* Hero Section */}
         <section className="mb-12">
