@@ -56,25 +56,28 @@ export default function LoginPage() {
     try {
         await signInWithEmailAndPassword(auth, email, password);
         toast({ title: "Login successful!"});
-        // onAuthStateChanged will handle the redirect
+        // onAuthStateChanged will handle the redirect in the useEffect hook
     } catch (err: any) {
+        // This logic handles the case where the admin user does not yet exist.
+        // It creates the user, grants them the admin role, and then prompts for a manual login.
         if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-            // User does not exist, so create the first admin account.
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const newUser = userCredential.user;
                 
-                // Grant admin role and wait for it to complete.
+                // Grant admin role and crucially wait for it to complete.
                 await grantAdminRole(firestore, newUser);
                 
-                // IMPORTANT: Do NOT log the user in.
-                // Inform them that the account is created and they need to log in.
+                // IMPORTANT: Do NOT log the user in automatically.
+                // Inform them that the account is created and they now need to log in with it.
+                // This forces a token refresh and guarantees the admin role is recognized.
                 toast({
                     title: "Admin Account Created",
                     description: "Your admin account has been created. Please log in to continue.",
-                    duration: 5000,
+                    duration: 7000,
                 });
-                // Clear password field for security
+                
+                // Clear the password field for security after account creation
                 setPassword('');
 
             } catch (createErr: any) {
@@ -87,6 +90,7 @@ export default function LoginPage() {
                 });
             }
         } else {
+            // Handle other login errors (e.g., wrong password, network issues)
             const errorMessage = err.message || "An unknown error occurred during login.";
             setError(errorMessage);
             toast({
@@ -112,8 +116,6 @@ export default function LoginPage() {
       )
   }
   
-  // This will be null on the first render, or if the user is logged out.
-  // If the user IS logged in, the useEffect will redirect them.
   if(user) {
       return null;
   }
