@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -84,8 +83,7 @@ export default function ProductManager() {
   };
 
   const uploadImages = async (files: FileList): Promise<string[]> => {
-    if (!auth) throw new Error('Authentication not available');
-    const storage = getStorage(auth.app);
+    const storage = getStorage();
     
     const uploadPromises = Array.from(files).map(async file => {
         const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);

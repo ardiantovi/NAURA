@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -56,7 +55,6 @@ export default function BannerManager() {
   const [bannerToDelete, setBannerToDelete] = useState<Banner | null>(null);
 
   const firestore = useFirestore();
-  const auth = useAuth();
   const { toast, dismiss } = useToast();
 
   const bannersCollection = useMemoFirebase(
@@ -95,8 +93,7 @@ export default function BannerManager() {
   };
 
   const uploadImage = async (file: File): Promise<string> => {
-    if (!auth) throw new Error('Authentication not available');
-    const storage = getStorage(auth.app);
+    const storage = getStorage();
     const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
     
     await uploadBytes(storageRef, file);
