@@ -38,7 +38,7 @@ export default function ProductCard({ product, recommendationReason }: ProductCa
   };
 
   return (
-    <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+    <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-2">
        {recommendationReason && (
          <TooltipProvider>
             <Tooltip>
@@ -61,7 +61,7 @@ export default function ProductCard({ product, recommendationReason }: ProductCa
               alt={product.name}
               width={600}
               height={400}
-              className="object-cover w-full h-full transform transition-transform duration-300 group-hover:scale-105"
+              className="object-cover w-full h-full transform transition-transform duration-500 ease-in-out group-hover:scale-110"
               data-ai-hint="tech product"
             />
           </div>
@@ -74,7 +74,7 @@ export default function ProductCard({ product, recommendationReason }: ProductCa
         <p className="text-xl font-semibold text-primary">{formatRupiah(product.price)}</p>
       </CardContent>
       <CardFooter className="flex flex-col items-stretch gap-2 p-4">
-        <Button className="w-full" onClick={handleBuyOnWhatsApp}>
+        <Button className="w-full transition-transform duration-200 hover:scale-105" onClick={handleBuyOnWhatsApp}>
             <MessageCircle className="mr-2 h-5 w-5"/>
             Buy on WhatsApp
         </Button>

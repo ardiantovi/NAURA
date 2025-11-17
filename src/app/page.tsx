@@ -24,6 +24,7 @@ import { collection, query, where, DocumentData } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 interface Banner {
   id: string;
@@ -90,7 +91,7 @@ export default function Home() {
                     <Skeleton className="w-full aspect-[2/1] md:aspect-[3/1] rounded-xl" />
                   </CarouselItem>
                 ) : (
-                  banners?.map((banner) => (
+                  banners?.map((banner, index) => (
                     <CarouselItem key={banner.id}>
                       <Link href={banner.linkUrl} passHref>
                         <Card className="overflow-hidden relative w-full aspect-[2/1] md:aspect-[3/1] flex items-center justify-center text-center bg-card text-card-foreground">
@@ -102,7 +103,7 @@ export default function Home() {
                                 data-ai-hint="promotional banner"
                             />
                              <div className="absolute inset-0 bg-black/50" />
-                             <div className="relative z-10 p-8">
+                             <div className={cn("relative z-10 p-8 fade-in-up")} style={{ animationDelay: `${index * 100}ms` }}>
                                 <h1 className="text-4xl md:text-6xl font-bold font-headline mb-4 tracking-tight text-white">
                                     {banner.altText}
                                 </h1>
