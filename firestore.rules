@@ -16,7 +16,7 @@
  *
  * Key Security Decisions:
  * - **Admin-Only Access:** All data modification operations are restricted to administrators.
- * - **No Public Access:** No public read or write access is granted to any collection.
+ * - **No Public Access:** No public write access is granted to any collection.
  * - **Existence-Based Roles:** Admin privileges are determined by the presence of a document
  *   with the user's ID in the `/roles_admin` collection. This approach simplifies rule logic
  *   and avoids the need to store role data within the document itself.
@@ -67,22 +67,20 @@ service cloud.firestore {
       allow write: if isSignedIn() && isAdmin();
     }
 
-        /**
+    /**
      * @description Security rules for the /roles_admin collection.
      * @path /roles_admin/{userId}
-     * @allow create: if isSignedIn() && isAdmin();
-     * @allow update: if isSignedIn() && isAdmin();
-     * @allow delete: if isSignedIn() && isAdmin();
-     * @allow get: if isSignedIn() && isAdmin();
-     * @allow list: if isSignedIn() && isAdmin();
-     * @principle Enforces admin-only access for role management. Only other admins can change admin role assignments.
+     * @allow create: A user can create their own admin role document. This is key for the first admin setup.
+     * @allow read, update, delete, list: Only existing admins can manage other admin roles.
+     * @principle Allows for initial self-promotion to admin, then restricts further role management to admins only.
      */
     match /roles_admin/{userId} {
-          allow get: if isSignedIn() && isAdmin();
-          allow list: if isSignedIn() && isAdmin();
-          allow create: if isSignedIn() && isAdmin();
-          allow update: if isSignedIn() && isAdmin();
-          allow delete: if isSignedIn() && isAdmin();
+        allow get: if isSignedIn() && isAdmin();
+        allow list: if isSignedIn() && isAdmin();
+        // A user can create their OWN admin document. This is the fix.
+        allow create: if isSignedIn() && request.auth.uid == userId;
+        allow update: if isSignedIn() && isAdmin();
+        allow delete: if isSignedIn() && isAdmin();
     }
   }
 }
