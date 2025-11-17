@@ -3,9 +3,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, doc } from 'firebase/firestore';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -56,6 +57,7 @@ export default function BannerManager() {
   const [bannerToDelete, setBannerToDelete] = useState<Banner | null>(null);
 
   const firestore = useFirestore();
+  const auth = useAuth();
   const { toast } = useToast();
 
   const bannersCollection = useMemoFirebase(
@@ -89,27 +91,76 @@ export default function BannerManager() {
     setBannerToDelete(null);
   };
 
-  const handleFormSubmit = (values: BannerFormValues) => {
+  const uploadImage = (file: File): Promise<string> => {
+    if (!auth) throw new Error('Authentication not available');
+    const storage = getStorage(auth.app);
+    const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    const { id: toastId, update } = toast({
+      title: 'Uploading Banner...',
+      description: 'Your banner is being uploaded.',
+      progress: 0,
+    });
+
+    return new Promise((resolve, reject) => {
+        uploadTask.on(
+            'state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                update({ progress });
+            },
+            (error) => {
+                console.error('Upload failed:', error);
+                update({ title: 'Upload Failed', description: error.message, variant: 'destructive' });
+                reject(error);
+            },
+            async () => {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                update({ title: 'Upload Successful', progress: 100 });
+                setTimeout(() => update({ open: false }), 2000);
+                resolve(downloadURL);
+            }
+        );
+    });
+  };
+
+  const handleFormSubmit = async (values: BannerFormValues, file?: File) => {
     if (!firestore || !bannersCollection) return;
     
     setIsFormOpen(false);
+    let imageUrl = selectedBanner?.imageUrl;
 
-    const bannerData = {
-        altText: values.altText,
-        linkUrl: values.linkUrl,
-        imageUrl: values.imageUrl,
-        startDate: selectedBanner?.startDate || new Date().toISOString(),
-        endDate: selectedBanner?.endDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(), // 1 year from now
-        priority: selectedBanner?.priority || 0,
-    };
+    try {
+        if (file) {
+            imageUrl = await uploadImage(file);
+        }
 
-    if (selectedBanner) {
-        const docRef = doc(firestore, 'banners', selectedBanner.id);
-        updateDocumentNonBlocking(docRef, bannerData);
-        toast({ title: 'Banner Updated' });
-    } else {
-        addDocumentNonBlocking(bannersCollection, bannerData);
-        toast({ title: 'Banner Added' });
+        if (!imageUrl) {
+            toast({ title: 'Error', description: 'An image is required.', variant: 'destructive'});
+            return;
+        }
+
+        const bannerData = {
+            altText: values.altText,
+            linkUrl: values.linkUrl,
+            imageUrl: imageUrl,
+            startDate: selectedBanner?.startDate || new Date().toISOString(),
+            endDate: selectedBanner?.endDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(), // 1 year from now
+            priority: selectedBanner?.priority || 0,
+        };
+
+        if (selectedBanner) {
+            const docRef = doc(firestore, 'banners', selectedBanner.id);
+            updateDocumentNonBlocking(docRef, bannerData);
+            toast({ title: 'Banner Updated' });
+        } else {
+            addDocumentNonBlocking(bannersCollection, bannerData);
+            toast({ title: 'Banner Added' });
+        }
+    } catch(error) {
+      console.error("Failed to save banner", error);
+      // toast is handled in uploadImage
     }
   };
 

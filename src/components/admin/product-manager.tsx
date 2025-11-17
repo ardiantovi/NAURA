@@ -3,9 +3,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, writeBatch } from 'firebase/firestore';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,6 +46,7 @@ export default function ProductManager() {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const firestore = useFirestore();
+  const auth = useAuth();
   const { toast } = useToast();
 
   const productsCollection = useMemoFirebase(
@@ -78,37 +80,104 @@ export default function ProductManager() {
     setProductToDelete(null);
   };
 
-  const handleFormSubmit = (values: ProductFormValues) => {
-     if (!firestore || !productsCollection) return;
-     
-     setIsFormOpen(false);
-     
-     // Split the text area content by new lines and filter out empty lines
-     const imageUrls = values.imageUrls.split('\n').map(url => url.trim()).filter(url => url);
+ const uploadImages = async (files: FileList): Promise<string[]> => {
+    if (!auth) throw new Error('Authentication not available');
+    const storage = getStorage(auth.app);
+    const urls: string[] = [];
+    const uploadPromises: Promise<string>[] = [];
 
-     const productData = {
-        name: values.name,
-        description: values.description,
-        price: values.price,
-        brand: values.brand,
-        images: imageUrls,
-        category: 'Audio', // Default category
-        specs: selectedProduct?.specs || {},
-      };
+    const { id: toastId, update } = toast({
+      title: 'Uploading Images...',
+      description: `Starting upload for ${files.length} images.`,
+      progress: 0,
+    });
 
-      if (selectedProduct) {
-          const docRef = doc(firestore, 'products', selectedProduct.id);
-          updateDocumentNonBlocking(docRef, productData);
-          toast({ title: 'Product Updated Successfully' });
-      } else {
-          addDocumentNonBlocking(productsCollection, productData);
-          toast({ title: 'Product Added Successfully' });
-      }
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        const promise = new Promise<string>((resolve, reject) => {
+            uploadTask.on(
+                'state_changed',
+                (snapshot) => {
+                    // Overall progress calculation could be complex. 
+                    // This just shows the progress of the last started upload.
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    update({
+                        description: `Uploading ${file.name}...`,
+                        progress: progress
+                    });
+                },
+                (error) => {
+                    console.error('Upload failed for a file:', error);
+                    reject(error);
+                },
+                async () => {
+                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                    resolve(downloadURL);
+                }
+            );
+        });
+        uploadPromises.push(promise);
+    }
+    
+    try {
+        const downloadedUrls = await Promise.all(uploadPromises);
+        update({
+            title: 'Upload Successful',
+            description: `All ${files.length} images uploaded.`,
+            progress: 100,
+        });
+        setTimeout(() => update({ open: false }), 2000); // Dismiss after 2s
+        return downloadedUrls;
+    } catch (error) {
+        update({
+            title: 'Upload Failed',
+            description: 'One or more images failed to upload.',
+            variant: 'destructive'
+        });
+        throw error;
+    }
+};
+
+  const handleFormSubmit = async (values: ProductFormValues, files?: FileList) => {
+    if (!firestore || !productsCollection) return;
+
+    setIsFormOpen(false);
+    let imageUrls: string[] = selectedProduct?.images || [];
+
+    try {
+        if (files && files.length > 0) {
+            imageUrls = await uploadImages(files);
+        }
+
+        const productData = {
+            name: values.name,
+            description: values.description,
+            price: values.price,
+            brand: values.brand,
+            images: imageUrls,
+            category: 'Audio', // Default category
+            specs: selectedProduct?.specs || {},
+        };
+
+        if (selectedProduct) {
+            const docRef = doc(firestore, 'products', selectedProduct.id);
+            updateDocumentNonBlocking(docRef, productData);
+            toast({ title: 'Product Updated Successfully' });
+        } else {
+            addDocumentNonBlocking(productsCollection, productData);
+            toast({ title: 'Product Added Successfully' });
+        }
+    } catch (error) {
+        console.error("Failed to save product:", error);
+        // The uploadImages function already shows a toast on failure.
+    }
   };
   
   const getImageUrl = (imageUrl: string | undefined) => {
     if (!imageUrl) return 'https://placehold.co/40x40/f3f4f6/333?text=?';
-    // No need for picsum fallback, as we expect a full URL
     return imageUrl;
   };
 

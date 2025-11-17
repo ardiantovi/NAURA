@@ -21,7 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 // Simple Banner type for this component
 interface Banner {
@@ -31,10 +31,20 @@ interface Banner {
     linkUrl: string;
 }
 
+// Zod schema for file validation
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
 const formSchema = z.object({
-  imageUrl: z.string().url('Must be a valid URL'),
   altText: z.string().min(1, 'Alt text is required'),
   linkUrl: z.string().url('Must be a valid URL'),
+  image: z.custom<FileList>()
+    .refine(files => files && files.length === 1, 'An image is required.')
+    .refine(files => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine(
+      files => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+      '.jpg, .jpeg, .png and .webp files are accepted.'
+    ).optional(),
 });
 
 export type BannerFormValues = z.infer<typeof formSchema>;
@@ -43,19 +53,21 @@ export type BannerFormValues = z.infer<typeof formSchema>;
 interface BannerFormProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSubmit: (values: BannerFormValues) => void;
+  onSubmit: (values: BannerFormValues, file?: File) => void;
   banner: Banner | null;
 }
 
 export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFormProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const defaultValues = {
-    imageUrl: banner?.imageUrl || '',
     altText: banner?.altText || '',
     linkUrl: banner?.linkUrl || '',
   };
 
   const form = useForm<BannerFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema.extend({
+        image: banner ? formSchema.shape.image.optional() : formSchema.shape.image,
+    })),
     defaultValues,
   });
 
@@ -63,12 +75,14 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
     form.reset({
         altText: banner?.altText || '',
         linkUrl: banner?.linkUrl || '',
-        imageUrl: banner?.imageUrl || '',
     });
+     if (isOpen && fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
   }, [banner, isOpen, form]);
 
   const handleSubmit = (values: BannerFormValues) => {
-    onSubmit(values);
+    onSubmit(values, values.image?.[0]);
     form.reset();
   };
 
@@ -82,14 +96,25 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="imageUrl"
-              render={({ field }) => (
+              name="image"
+              render={({ field: { onChange, value, ...rest } }) => (
                 <FormItem>
-                  <FormLabel>Image URL</FormLabel>
+                  <FormLabel>Banner Image</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="https://example.com/image.png" />
+                     <Input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      onChange={(e) => onChange(e.target.files)}
+                      {...rest}
+                    />
                   </FormControl>
                   <FormMessage />
+                   {banner && (
+                     <p className="text-sm text-muted-foreground">
+                        Current image is preserved. Upload a new file only if you want to replace it.
+                    </p>
+                  )}
                 </FormItem>
               )}
             />

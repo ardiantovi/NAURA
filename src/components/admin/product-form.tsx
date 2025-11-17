@@ -30,15 +30,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { brands } from '@/lib/data';
+
+// Zod schema for file validation
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   price: z.coerce.number().positive('Price must be positive'),
   brand: z.string().min(1, 'Brand is required'),
-  imageUrls: z.string().min(1, 'At least one image URL is required.'),
+  images: z.custom<FileList>()
+    .refine(files => files && files.length > 0, 'At least one image is required.')
+    .refine(files => Array.from(files).every(file => file.size <= MAX_FILE_SIZE), `Max file size is 5MB.`)
+    .refine(
+      files => Array.from(files).every(file => ACCEPTED_IMAGE_TYPES.includes(file.type)),
+      '.jpg, .jpeg, .png and .webp files are accepted.'
+    ).optional(), // Optional if we are editing and not changing images
 });
 
 export type ProductFormValues = z.infer<typeof formSchema>;
@@ -47,21 +57,25 @@ export type ProductFormValues = z.infer<typeof formSchema>;
 interface ProductFormProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSubmit: (values: ProductFormValues) => void;
+  onSubmit: (values: ProductFormValues, files?: FileList) => void;
   product: Product | null;
 }
 
 export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: ProductFormProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const defaultValues = {
     name: product?.name || '',
     description: product?.description || '',
     price: product?.price || 0,
     brand: product?.brand || '',
-    imageUrls: product?.images?.join('\n') || '',
   };
   
   const form = useForm<ProductFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema.extend({
+      // Make images required only when creating a new product
+      images: product ? formSchema.shape.images.optional() : formSchema.shape.images,
+    })),
     defaultValues,
   });
 
@@ -71,13 +85,16 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
       description: product?.description || '',
       price: product?.price || 0,
       brand: product?.brand || '',
-      imageUrls: product?.images?.join('\n') || '',
     });
+    // Reset file input when dialog opens
+    if (isOpen && fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
   }, [product, isOpen, form]);
 
 
   const handleSubmit = (values: ProductFormValues) => {
-    onSubmit(values);
+    onSubmit(values, values.images);
     form.reset();
   };
 
@@ -156,18 +173,26 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
               />
             <FormField
               control={form.control}
-              name="imageUrls"
-              render={({ field }) => (
+              name="images"
+              render={({ field: { onChange, value, ...rest } }) => (
                 <FormItem>
-                  <FormLabel>Product Image URLs</FormLabel>
-                   <FormControl>
-                      <Textarea 
-                        {...field} 
-                        rows={4}
-                        placeholder="Paste image URLs here, one per line."
-                      />
-                    </FormControl>
-                  <FormMessage />
+                  <FormLabel>Product Images</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      ref={fileInputRef}
+                      onChange={(e) => onChange(e.target.files)}
+                      {...rest}
+                    />
+                  </FormControl>
+                   <FormMessage />
+                  {product && (
+                     <p className="text-sm text-muted-foreground">
+                        Current images are preserved. Upload new files only if you want to replace them.
+                    </p>
+                  )}
                 </FormItem>
               )}
             />
