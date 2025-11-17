@@ -3,26 +3,14 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Aturan lebih spesifik untuk folder 'products'
-    match /products/{allPaths=**} {
-      // Izinkan siapapun untuk MEMBACA (read) gambar produk (untuk ditampilkan di toko).
-      // 'read' mencakup 'get' dan 'list'.
+    // Allow read access to all files for displaying them in the app
+    match /{allPaths=**} {
       allow read;
-      // Hanya izinkan pengguna terautentikasi (admin) untuk MENULIS (mengunggah/menghapus/mengupdate).
-      allow write: if request.auth != null;
     }
-
-    // Aturan lebih spesifik untuk folder 'banners'
-    match /banners/{allPaths=**} {
-      // Izinkan siapapun untuk MEMBACA gambar banner.
-      allow read;
-      // Hanya izinkan pengguna terautentikasi (admin) untuk MENULIS.
-      allow write: if request.auth != null;
-    }
-
-    // Aturan untuk folder 'uploads' jika ada (opsional, sebagai pengaman)
+    
+    // Restrict write access to the 'uploads' folder to only authenticated users
     match /uploads/{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow write: if request.auth != null;
     }
   }
 }

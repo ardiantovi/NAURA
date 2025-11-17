@@ -86,18 +86,17 @@ export default function ProductManager() {
     
     const { id: overallToastId, update: updateOverallToast } = toast({
         title: 'Uploading Images...',
-        description: `0% - Starting to upload ${files.length} images.`,
-        progress: 0,
+        description: `Starting to upload ${files.length} images.`,
     });
 
     const uploadPromises = Array.from(files).map(file => {
-        const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
+        const storageRef = ref(storage, `uploads/products/${Date.now()}_${file.name}`);
         const uploadTask = uploadBytesResumable(storageRef, file);
         
         return new Promise<string>((resolve, reject) => {
             uploadTask.on('state_changed',
                 (snapshot) => {
-                    // This is just for one file, overall progress will be calculated later
+                    // Overall progress is handled outside this individual promise
                 },
                 (error) => reject(error),
                 () => getDownloadURL(uploadTask.snapshot.ref).then(resolve)
@@ -105,19 +104,8 @@ export default function ProductManager() {
         });
     });
 
-    // This is a simple way to show progress. For multiple files, we just average it.
-    // A more complex implementation could weigh by file size.
-    const allTasks = Promise.all(uploadPromises);
-    
-    const interval = setInterval(() => {
-        const individualProgress = (uploadPromises as any).map((p: any) => p.progress || 0);
-        const totalProgress = individualProgress.reduce((acc: number, p: number) => acc + p, 0) / files.length;
-        updateOverallToast({ id: overallToastId, progress: totalProgress, description: `${Math.round(totalProgress)}% complete` });
-    }, 200);
-
     try {
-        const downloadedUrls = await allTasks;
-        clearInterval(interval);
+        const downloadedUrls = await Promise.all(uploadPromises);
         dismiss(overallToastId);
         toast({
             title: 'Upload Successful',
@@ -126,7 +114,6 @@ export default function ProductManager() {
         });
         return downloadedUrls;
     } catch (error: any) {
-        clearInterval(interval);
         dismiss(overallToastId);
         toast({
             title: 'Upload Failed',

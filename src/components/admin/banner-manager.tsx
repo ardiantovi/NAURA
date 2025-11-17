@@ -94,7 +94,7 @@ export default function BannerManager() {
   const uploadImage = (file: File): Promise<string> => {
     if (!auth) throw new Error('Authentication not available');
     const storage = getStorage(auth.app);
-    const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
+    const storageRef = ref(storage, `uploads/banners/${Date.now()}_${file.name}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     const { id: toastId, update } = toast({
@@ -113,7 +113,7 @@ export default function BannerManager() {
             (error) => {
                 console.error('Upload failed:', error);
                 dismiss(toastId);
-                toast({
+                const errorToast = toast({
                   title: 'Upload Failed',
                   description: error.message,
                   variant: 'destructive',
