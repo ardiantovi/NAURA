@@ -13,14 +13,6 @@ export default function Footer() {
         </p>
         <div className="flex flex-col sm:flex-row items-center gap-4">
             <Link
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                <MessageCircle className="h-4 w-4" />
-            </Link>
-            <Link
             href="https://maps.app.goo.gl/GgbWLVomXgASTnu6A"
             target="_blank"
             rel="noopener noreferrer"
