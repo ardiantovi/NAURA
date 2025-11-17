@@ -90,11 +90,9 @@ export default function ProductManager() {
             if (values.images && values.images.length > 0) {
                  const files = values.images as FileList;
                  const storage = getStorage();
-                 const totalSize = Array.from(files).reduce((acc, file) => acc + file.size, 0);
-                 let uploadedSize = 0;
-
+                 
                  const { id: toastId } = toast({
-                    title: `Uploading ${files.length} images...`,
+                    title: `Uploading ${files.length} image(s)...`,
                     description: 'Please wait.',
                     progress: 0,
                  });
@@ -106,14 +104,17 @@ export default function ProductManager() {
                     return new Promise<string>((resolve, reject) => {
                         uploadTask.on('state_changed',
                             (snapshot: UploadTaskSnapshot) => {
-                                // This snapshot is for a single file, we need to calculate total progress
+                                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                                // This is progress for a single file, for simplicity we show the latest progress
+                                toast({
+                                  id: toastId,
+                                  title: `Uploading ${file.name}...`,
+                                  progress,
+                                });
                             },
                             reject, // Reject promise on error
                             async () => {
                                 const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                                uploadedSize += uploadTask.snapshot.totalBytes;
-                                const totalProgress = (uploadedSize / totalSize) * 100;
-                                toast({ id: toastId, progress: totalProgress });
                                 resolve(downloadURL);
                             }
                         );

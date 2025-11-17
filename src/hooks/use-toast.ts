@@ -108,10 +108,16 @@ export const reducer = (state: State, action: Action): State => {
       // ! Side effects ! - This could be extracted into a dismissToast() action,
       // but I'll keep it here for simplicity
       if (toastId) {
-        addToRemoveQueue(toastId)
+        const toast = state.toasts.find(t => t.id === toastId);
+        // Do not automatically remove toasts with progress bars
+        if (toast && toast.progress === undefined) {
+            addToRemoveQueue(toastId)
+        }
       } else {
         state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id)
+           if (toast.progress === undefined) {
+             addToRemoveQueue(toast.id)
+           }
         })
       }
 
@@ -164,7 +170,7 @@ function toast(props: Toast) {
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
 
-  const actionType = props.id ? 'UPDATE_TOAST' : 'ADD_TOAST';
+  const actionType = props.id && memoryState.toasts.some(t => t.id === props.id) ? 'UPDATE_TOAST' : 'ADD_TOAST';
 
   dispatch({
     type: actionType,
