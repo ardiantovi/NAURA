@@ -46,14 +46,14 @@ export default function ProductsPage() {
           {/* Sidebar */}
           <aside>
             <Card className="p-6 sticky top-28">
-              <h3 className="font-headline text-xl font-semibold mb-4 text-primary">Brands</h3>
+              <h3 className="font-headline text-xl font-semibold mb-4 text-primary">MEREK</h3>
               <div className="space-y-2">
                 <Button
                   variant={selectedBrand === null ? 'secondary' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => setSelectedBrand(null)}
                 >
-                  All Brands
+                  Semua Merek
                 </Button>
                 {brands.map((brand) => (
                   <Button
