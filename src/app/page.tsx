@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, MessageCircle, MapPin } from 'lucide-react';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
+import { FallingStars } from '@/components/ui/falling-stars';
+
 
 export default function Home() {
   const phoneNumber = "6285183280606";
@@ -15,9 +17,10 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <FallingStars />
       <Header />
 
-      <main className="flex-grow flex items-center justify-center container mx-auto px-4 py-8">
+      <main className="flex-grow flex items-center justify-center container mx-auto px-4 py-8 z-10">
         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
           {/* Logo Section */}
           <div className="flex justify-center fade-in-up" style={{ animationDelay: '100ms' }}>
