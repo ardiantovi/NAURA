@@ -10,7 +10,7 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 3
-const TOAST_REMOVE_DELAY = 10000
+const TOAST_REMOVE_DELAY = 5000 // Give a bit more time
 
 type ToasterToast = ToastProps & {
   id: string
@@ -68,7 +68,7 @@ const addToRemoveQueue = (toastId: string) => {
   const timeout = setTimeout(() => {
     toastTimeouts.delete(toastId)
     dispatch({
-      type: "DISMISS_TOAST",
+      type: "REMOVE_TOAST",
       toastId: toastId,
     })
   }, TOAST_REMOVE_DELAY)
@@ -85,17 +85,6 @@ export const reducer = (state: State, action: Action): State => {
       }
 
     case "UPDATE_TOAST":
-      // If the toast is not in the list, add it.
-      if (action.toast.id && !state.toasts.some(t => t.id === action.toast.id)) {
-        const newToast: ToasterToast = {
-          id: action.toast.id,
-          ...action.toast
-        }
-        return {
-          ...state,
-          toasts: [newToast, ...state.toasts].slice(0, TOAST_LIMIT),
-        }
-      }
       return {
         ...state,
         toasts: state.toasts.map((t) =>
@@ -105,14 +94,16 @@ export const reducer = (state: State, action: Action): State => {
 
     case "DISMISS_TOAST": {
       const { toastId } = action
+
+      // If toastId is provided, dismiss that one. Otherwise, dismiss all.
       if (toastId) {
-        addToRemoveQueue(toastId)
+         addToRemoveQueue(toastId)
       } else {
         state.toasts.forEach((t) => {
           addToRemoveQueue(t.id)
         })
       }
-      
+
       return {
         ...state,
         toasts: state.toasts.map((t) =>
@@ -150,9 +141,9 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, "id"> & { id?: string }
+type Toast = Omit<ToasterToast, "id">
 
-function toast(props: Toast) {
+function toast(props: Toast & { id?: string }) {
   const id = props.id || genId()
   const isUpdate = memoryState.toasts.some(t => t.id === id);
 
@@ -168,17 +159,27 @@ function toast(props: Toast) {
         open: true,
         onOpenChange: (open) => {
           if (!open) {
+            // This is called when the user manually closes the toast or swipe to dismiss.
+            // We should remove it from the state.
             dispatch({ type: "REMOVE_TOAST", toastId: id });
           }
         },
       },
     });
+
+    // Only add to remove queue if it's not a progress toast
+    if (props.progress === undefined) {
+      addToRemoveQueue(id);
+    }
   }
 
   return {
     id: id,
-    dismiss: () => dispatch({ type: "DISMISS_TOAST", toastId: id }),
-    update: (props: ToasterToast) => dispatch({ type: "UPDATE_TOAST", toast: { ...props, id } }),
+    dismiss: () => {
+        // When we dismiss, we first set open to false to animate out, then remove.
+        dispatch({ type: "DISMISS_TOAST", toastId: id })
+    },
+    update: (props: Partial<ToasterToast>) => dispatch({ type: "UPDATE_TOAST", toast: { ...props, id } }),
   }
 }
 
