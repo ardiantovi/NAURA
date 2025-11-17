@@ -47,7 +47,7 @@ export default function ProductManager() {
 
   const firestore = useFirestore();
   const auth = useAuth();
-  const { toast, dismiss } = useToast();
+  const { toast } = useToast();
 
   const productsCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'products') : null),
@@ -92,75 +92,29 @@ export default function ProductManager() {
      }
 
      const storage = getStorage();
-     const toastId = `upload-${Date.now()}`;
-
-     let totalBytes = 0;
-     Array.from(files).forEach(file => totalBytes += file.size);
-     let totalBytesTransferred = 0;
-
-     toast({
-         id: toastId,
+     const uploadToast = toast({
          title: `Uploading ${files.length} image(s)...`,
          description: 'Please wait.',
          progress: 0,
      });
 
-     const uploadPromises = Array.from(files).map(file => {
-         const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
-         const uploadTask = uploadBytesResumable(storageRef, file);
-
-         return new Promise<string>((resolve, reject) => {
-             uploadTask.on('state_changed',
-                 (snapshot: UploadTaskSnapshot) => {
-                    // This specific upload's progress. We will calculate total progress below.
-                 },
-                 reject,
-                 async () => {
-                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                     resolve(downloadURL);
-                 }
-             );
-             // A bit of a hack to track total progress across multiple uploads
-             uploadTask.on('state_changed', (snapshot: UploadTaskSnapshot) => {
-                // This listener is just to update the total progress
-                // We find the delta and add it to the total
-             });
-             const progressTracker = (snapshot: UploadTaskSnapshot) => {
-                const recentBytes = snapshot.bytesTransferred;
-                // This isn't perfect, but gives a reasonable progress feel
-                // A better approach would need to track each upload's progress individually
-             };
-             // A simpler way to update progress is to just update on each state_changed event
-             uploadTask.on('state_changed', (snapshot) => {
-                let currentTotal = 0;
-                // this is not a perfect science as we don't know which promise has updated
-                // we sum up the bytes transferred from all tasks on every update
-                
-                // Let's try a simpler approach. Sum up total transferred and update.
-                // This is not perfect, so we'll just track total and update based on that.
-             });
-         });
-     });
-
-    // Let's use a more robust way to track progress
     const allUploadTasks = Array.from(files).map(file => {
         const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
         return uploadBytesResumable(storageRef, file);
     });
 
+    // This listener updates the progress for all uploads combined.
+    const combinedProgressListener = () => {
+      const totalBytes = allUploadTasks.reduce((acc, t) => acc + t.snapshot.totalBytes, 0);
+      const totalTransferred = allUploadTasks.reduce((acc, t) => acc + t.snapshot.bytesTransferred, 0);
+      if (totalBytes > 0) {
+        const progress = (totalTransferred / totalBytes) * 100;
+        uploadToast.update({ progress: progress });
+      }
+    };
+
     allUploadTasks.forEach(task => {
-        task.on('state_changed', (snapshot) => {
-            const totalTransferred = allUploadTasks.reduce((acc, t) => acc + t.snapshot.bytesTransferred, 0);
-            const totalSize = allUploadTasks.reduce((acc, t) => acc + t.snapshot.totalBytes, 0);
-            if (totalSize > 0) {
-              const progress = (totalTransferred / totalSize) * 100;
-              toast({
-                  id: toastId,
-                  title: `Uploading ${files.length} image(s)...`,
-                  progress: progress,
-              });
-            }
-        });
+        task.on('state_changed', combinedProgressListener);
     });
 
     const allPromises = allUploadTasks.map(task => new Promise<string>((resolve, reject) => {
@@ -171,13 +125,12 @@ export default function ProductManager() {
     }));
      
      Promise.all(allPromises).then(imageUrls => {
-         toast({ id: toastId, title: 'Upload complete!', description: 'Saving product data...', progress: 100 });
+         uploadToast.update({ title: 'Upload complete!', description: 'Saving product data...', progress: 100 });
          saveProductData(values, imageUrls);
-         setTimeout(() => dismiss(toastId), 2000); // Dismiss after 2 seconds
+         setTimeout(() => uploadToast.dismiss(), 2000); // Dismiss after 2 seconds
      }).catch(error => {
          console.error("Error uploading files:", error);
-         toast({
-             id: toastId,
+         uploadToast.update({
              variant: "destructive",
              title: "Upload Failed",
              description: "Could not upload images.",

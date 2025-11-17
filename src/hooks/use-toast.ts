@@ -1,4 +1,3 @@
-
 "use client"
 
 // Inspired by react-hot-toast library
@@ -9,8 +8,7 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 3
-const TOAST_REMOVE_DELAY = 5000 // Give a bit more time
+const TOAST_LIMIT = 3;
 
 type ToasterToast = ToastProps & {
   id: string
@@ -58,25 +56,18 @@ interface State {
   toasts: ToasterToast[]
 }
 
-const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
+const listeners: Array<(state: State) => void> = []
 
-const addToRemoveQueue = (toastId: string) => {
-  if (toastTimeouts.has(toastId)) {
-    return
-  }
+let memoryState: State = { toasts: [] }
 
-  const timeout = setTimeout(() => {
-    toastTimeouts.delete(toastId)
-    dispatch({
-      type: "REMOVE_TOAST",
-      toastId: toastId,
-    })
-  }, TOAST_REMOVE_DELAY)
-
-  toastTimeouts.set(toastId, timeout)
+function dispatch(action: Action) {
+  memoryState = reducer(memoryState, action)
+  listeners.forEach((listener) => {
+    listener(memoryState)
+  })
 }
 
-export const reducer = (state: State, action: Action): State => {
+const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
       return {
@@ -94,15 +85,6 @@ export const reducer = (state: State, action: Action): State => {
 
     case "DISMISS_TOAST": {
       const { toastId } = action
-
-      // If toastId is provided, dismiss that one. Otherwise, dismiss all.
-      if (toastId) {
-         addToRemoveQueue(toastId)
-      } else {
-        state.toasts.forEach((t) => {
-          addToRemoveQueue(t.id)
-        })
-      }
 
       return {
         ...state,
@@ -130,56 +112,39 @@ export const reducer = (state: State, action: Action): State => {
   }
 }
 
-const listeners: Array<(state: State) => void> = []
-
-let memoryState: State = { toasts: [] }
-
-function dispatch(action: Action) {
-  memoryState = reducer(memoryState, action)
-  listeners.forEach((listener) => {
-    listener(memoryState)
-  })
-}
 
 type Toast = Omit<ToasterToast, "id">
 
-function toast(props: Toast & { id?: string }) {
-  const id = props.id || genId()
-  const isUpdate = memoryState.toasts.some(t => t.id === id);
+function toast(props: Toast) {
+  const id = genId()
 
-  if (isUpdate) {
-    dispatch({ type: "UPDATE_TOAST", toast: { ...props, id } });
-  } else {
-    // This is a new toast
-    dispatch({
-      type: "ADD_TOAST",
-      toast: {
-        ...props,
-        id,
-        open: true,
-        onOpenChange: (open) => {
-          if (!open) {
-            // This is called when the user manually closes the toast or swipe to dismiss.
-            // We should remove it from the state.
-            dispatch({ type: "REMOVE_TOAST", toastId: id });
-          }
-        },
+  const update = (props: Partial<ToasterToast>) => {
+    dispatch({ type: 'UPDATE_TOAST', toast: { ...props, id } });
+  };
+  const dismiss = () => {
+    dispatch({ type: 'DISMISS_TOAST', toastId: id });
+    // Allows toast to animate out before removing
+    setTimeout(() => {
+        dispatch({ type: 'REMOVE_TOAST', toastId: id });
+    }, 1000); 
+  };
+
+  dispatch({
+    type: "ADD_TOAST",
+    toast: {
+      ...props,
+      id,
+      open: true,
+      onOpenChange: (open) => {
+        if (!open) dismiss()
       },
-    });
-
-    // Only add to remove queue if it's not a progress toast
-    if (props.progress === undefined) {
-      addToRemoveQueue(id);
-    }
-  }
+    },
+  });
 
   return {
     id: id,
-    dismiss: () => {
-        // When we dismiss, we first set open to false to animate out, then remove.
-        dispatch({ type: "DISMISS_TOAST", toastId: id })
-    },
-    update: (props: Partial<ToasterToast>) => dispatch({ type: "UPDATE_TOAST", toast: { ...props, id } }),
+    dismiss,
+    update,
   }
 }
 
@@ -201,6 +166,9 @@ function useToast() {
     toast,
     dismiss: (toastId?: string) => {
         dispatch({ type: "DISMISS_TOAST", toastId });
+        setTimeout(() => {
+            dispatch({ type: "REMOVE_TOAST", toastId });
+        }, 1000);
     },
   }
 }

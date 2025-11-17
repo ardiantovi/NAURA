@@ -58,7 +58,7 @@ export default function BannerManager() {
 
   const firestore = useFirestore();
   const auth = useAuth();
-  const { toast, dismiss } = useToast();
+  const { toast } = useToast();
 
   const bannersCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'banners') : null),
@@ -101,10 +101,8 @@ export default function BannerManager() {
         const file = values.image as File;
         const storageRef = ref(storage, `banners/${Date.now()}_${file.name}`);
         const uploadTask = uploadBytesResumable(storageRef, file);
-        const toastId = `upload-banner-${Date.now()}`;
-
-        toast({
-            id: toastId,
+        
+        const uploadToast = toast({
             title: 'Uploading image...',
             description: 'Please wait.',
             progress: 0,
@@ -113,12 +111,11 @@ export default function BannerManager() {
         uploadTask.on('state_changed', 
             (snapshot: UploadTaskSnapshot) => {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                toast({ id: toastId, progress: progress, title: 'Uploading image...' });
+                uploadToast.update({ progress: progress });
             },
             (error) => {
                 console.error("Upload failed:", error);
-                dismiss(toastId);
-                toast({
+                uploadToast.update({
                     variant: "destructive",
                     title: "Upload Failed",
                     description: "Could not upload the image.",
@@ -126,15 +123,14 @@ export default function BannerManager() {
             },
             async () => {
                 const imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
-                toast({ 
-                    id: toastId, 
+                uploadToast.update({ 
                     title: 'Upload successful!', 
                     description: 'Saving banner data...',
                     progress: 100
                 });
                 
                 saveBannerData(imageUrl, values);
-                setTimeout(() => dismiss(toastId), 2000);
+                setTimeout(() => uploadToast.dismiss(), 2000);
             }
         );
     } else if (selectedBanner) {
