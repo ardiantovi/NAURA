@@ -11,7 +11,7 @@ export default function Header() {
           <Link href="/" className="flex items-center gap-2">
             <span className="font-bold text-base font-headline">PILIHAN YANG TEPAT ADA DI NAURA</span>
           </Link>
-          <div className="font-semibold text-destructive text-sm">
+          <div className="font-bold text-destructive text-base">
             TIDAK BISA COD
           </div>
         </div>
