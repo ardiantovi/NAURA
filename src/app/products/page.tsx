@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useTransition } from 'react';
 import type { Product } from '@/lib/types';
 import { brands } from '@/lib/data';
 import Header from '@/components/header';
@@ -9,14 +9,17 @@ import ProductCard from '@/components/product-card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search, Annoyed } from 'lucide-react';
+import { Search, Annoyed, Loader2 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { searchProducts } from '@/ai/flows/product-search-flow';
 
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [isSearching, startSearchTransition] = useTransition();
+  const [filteredProductIds, setFilteredProductIds] = useState<string[] | null>(null);
 
   const firestore = useFirestore();
 
@@ -27,16 +30,48 @@ export default function ProductsPage() {
 
   const { data: products, isLoading: isLoadingProducts } = useCollection<Product>(productsQuery);
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!searchQuery) {
+        setFilteredProductIds(null); // Reset filter if search is cleared
+        return;
+    }
+
+    startSearchTransition(async () => {
+        if (!products) return;
+        try {
+            const result = await searchProducts({ query: searchQuery, products: products });
+            setFilteredProductIds(result.relevantProductIds);
+        } catch (error) {
+            console.error("AI search failed:", error);
+            setFilteredProductIds([]); // Show no results on error
+        }
+    });
   };
 
-  const filteredProducts = products?.filter((product) => {
-    const brandName = product.brand || 'Unknown';
-    const matchesBrand = selectedBrand ? brandName === selectedBrand : true;
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesBrand && matchesSearch;
-  }) || [];
+  const filteredProducts = useMemoFirebase(() => {
+    if (!products) return [];
+
+    let brandFilteredProducts = products.filter((product) => {
+        const brandName = product.brand || 'Unknown';
+        return selectedBrand ? brandName === selectedBrand : true;
+    });
+
+    if (filteredProductIds !== null) {
+      const idSet = new Set(filteredProductIds);
+      return brandFilteredProducts.filter(p => idSet.has(p.id));
+    }
+    
+    // If no AI search has been performed, just return the brand-filtered products
+    return brandFilteredProducts;
+
+  }, [products, selectedBrand, filteredProductIds]);
+
+  const handleResetFilters = () => {
+    setSelectedBrand(null);
+    setSearchQuery('');
+    setFilteredProductIds(null);
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -71,18 +106,22 @@ export default function ProductsPage() {
 
           {/* Product Grid and Search */}
           <div>
-            <div className="relative mb-8">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search for products..."
-                className="w-full pl-10 text-base"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-
-            {isLoadingProducts ? (
+            <form onSubmit={handleSearchSubmit}>
+                <div className="relative mb-8">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                        type="search"
+                        placeholder="Cari produk dengan AI... (cth: speaker bassnya bagus)"
+                        className="w-full pl-10 pr-24 text-base"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <Button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2" disabled={isSearching}>
+                        {isSearching ? <Loader2 className="animate-spin" /> : 'Cari'}
+                    </Button>
+                </div>
+            </form>
+            {(isLoadingProducts || isSearching) ? (
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {[...Array(6)].map((_, i) => (
                     <Card key={i}>
@@ -106,8 +145,9 @@ export default function ProductsPage() {
                     <div className="flex justify-center mb-4">
                         <Annoyed className="h-12 w-12 text-muted-foreground/50"/>
                     </div>
-                  <h3 className="text-xl font-semibold mb-2">No Products Found</h3>
-                  <p>Try adjusting your search or filters.</p>
+                  <h3 className="text-xl font-semibold mb-2">Produk Tidak Ditemukan</h3>
+                  <p className='mb-4'>Coba sesuaikan pencarian atau filter Anda.</p>
+                  <Button onClick={handleResetFilters}>Hapus Filter</Button>
                 </CardContent>
               </Card>
             )}
