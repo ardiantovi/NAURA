@@ -90,7 +90,7 @@ export default function ProductManager() {
     });
 
     const uploadPromises = Array.from(files).map(file => {
-        const storageRef = ref(storage, `uploads/products/${Date.now()}_${file.name}`);
+        const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
         const uploadTask = uploadBytesResumable(storageRef, file);
         
         return new Promise<string>((resolve, reject) => {
