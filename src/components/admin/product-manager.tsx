@@ -100,6 +100,15 @@ export default function ProductManager() {
     return imageUrl.startsWith('http') ? imageUrl : `https://picsum.photos/seed/${imageUrl}/40/40`;
   };
 
+  const formatRupiah = (price: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
   return (
     <>
       <Card>
@@ -149,7 +158,7 @@ export default function ProductManager() {
                   </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.brand}</TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
+                  <TableCell>{formatRupiah(product.price)}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

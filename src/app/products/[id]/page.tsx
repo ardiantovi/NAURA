@@ -84,6 +84,16 @@ export default function ProductDetailPage() {
     if (!imageUrl) return 'https://placehold.co/800x600/f3f4f6/333?text=?';
     return imageUrl.startsWith('http') ? imageUrl : `https://picsum.photos/seed/${imageUrl}/800/600`;
   };
+  
+  const formatRupiah = (price: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -130,7 +140,7 @@ export default function ProductDetailPage() {
               <p className="text-sm font-semibold text-primary mb-1">{product.brand}</p>
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold font-headline mb-2">{product.name}</h1>
               <p className="text-muted-foreground text-base md:text-lg mb-4">{product.category}</p>
-              <p className="text-3xl md:text-4xl font-bold text-primary mb-6">${product.price.toFixed(2)}</p>
+              <p className="text-3xl md:text-4xl font-bold text-primary mb-6">{formatRupiah(product.price)}</p>
 
               <p className="text-foreground/80 leading-relaxed mb-6 flex-grow">{product.description}</p>
               

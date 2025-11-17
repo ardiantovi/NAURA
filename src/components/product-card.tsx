@@ -27,6 +27,15 @@ export default function ProductCard({ product, recommendationReason }: ProductCa
     );
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
   };
+  
+  const formatRupiah = (price: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
 
   return (
     <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
@@ -62,7 +71,7 @@ export default function ProductCard({ product, recommendationReason }: ProductCa
         <CardTitle className="text-lg font-headline font-medium mb-2 leading-tight h-10 overflow-hidden">
           <Link href={`/products/${product.id}`}>{product.name}</Link>
         </CardTitle>
-        <p className="text-xl font-semibold text-primary">${product.price.toFixed(2)}</p>
+        <p className="text-xl font-semibold text-primary">{formatRupiah(product.price)}</p>
       </CardContent>
       <CardFooter className="flex flex-col items-stretch gap-2 p-4">
         <Button className="w-full" onClick={handleBuyOnWhatsApp}>
