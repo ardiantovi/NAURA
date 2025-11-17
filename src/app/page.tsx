@@ -86,7 +86,7 @@ export default function Home() {
                 className="w-full h-16 text-xl justify-between fade-in-up"
                 style={{ animationDelay: '500ms' }}
               >
-                LINK WA
+                HUBUNGI KAMI DI WHATSAPP
                 <MessageCircle className="h-6 w-6" />
               </Button>
             </a>
@@ -97,7 +97,7 @@ export default function Home() {
                 className="w-full h-16 text-xl justify-between fade-in-up"
                 style={{ animationDelay: '700ms' }}
               >
-                LINK MAPS
+                KUNJUNGI TOKO KAMI
                 <MapPin className="h-6 w-6" />
               </Button>
             </a>
