@@ -18,16 +18,6 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export default function Home() {
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-
-  useEffect(() => {
-    const hasVisited = sessionStorage.getItem('hasVisitedNaura');
-    if (!hasVisited) {
-      setShowWelcomeModal(true);
-      sessionStorage.setItem('hasVisitedNaura', 'true');
-    }
-  }, []);
-
   const phoneNumber = "6285183280606";
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=Halo, saya tertarik dengan produk Anda.`;
   const mapsUrl = "https://maps.app.goo.gl/GgbWLVomXgASTnu6A";
@@ -35,17 +25,6 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-
-      <AlertDialog open={showWelcomeModal} onOpenChange={setShowWelcomeModal}>
-        <AlertDialogContent className="max-w-md text-center">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-bold font-headline tracking-wider">
-              WELCOME TO NAURA ELECTRONIC
-            </AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogAction>Continue</AlertDialogAction>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <main className="flex-grow flex items-center justify-center container mx-auto px-4 py-8">
         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
