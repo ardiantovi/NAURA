@@ -81,15 +81,15 @@ export default function ProductManager() {
 
   const uploadImages = async (files: FileList): Promise<string[]> => {
     const storage = getStorage();
-    const imageUrls: string[] = [];
     toast({ title: `Uploading ${files.length} images...`, description: 'Please wait.' });
 
-    for (const file of Array.from(files)) {
+    const uploadPromises = Array.from(files).map(async (file) => {
       const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      imageUrls.push(downloadURL);
-    }
+      return getDownloadURL(snapshot.ref);
+    });
+
+    const imageUrls = await Promise.all(uploadPromises);
     
     toast({ title: 'Upload successful!', description: `${files.length} images are now available.` });
     return imageUrls;
