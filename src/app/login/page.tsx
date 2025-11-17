@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useAuth, useFirestore } from '@/firebase'; // Using custom hooks
+import { useUser, useAuth } from '@/firebase';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, UserCredential } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 
 export default function LoginPage() {
@@ -21,7 +20,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
-  const firestore = useFirestore();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -30,16 +28,9 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const grantAdminRole = async (userId: string) => {
-    if (!firestore) return;
-    const adminRoleRef = doc(firestore, 'roles_admin', userId);
-    // The document can be empty, its existence is what grants the role.
-    await setDoc(adminRoleRef, {});
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !firestore) {
+    if (!auth) {
         setError("Firebase is not initialized.");
         toast({
             variant: "destructive",
@@ -54,45 +45,19 @@ export default function LoginPage() {
         toast({ title: "Login successful!"});
         router.push('/admin');
     } catch (err: any) {
+        let errorMessage = "An unknown error occurred during login.";
         if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-            // User does not exist, so we will create a new one as an admin.
-            try {
-                const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const newUser = userCredential.user;
-                
-                // IMPORTANT: Grant the admin role and WAIT for it to complete.
-                await grantAdminRole(newUser.uid);
-                
-                // CRITICAL FIX: Do NOT log the user in automatically.
-                // Instead, inform them that the account is created and they must log in again.
-                // This forces a token refresh which correctly reflects their new admin status.
-                toast({ 
-                    title: "Admin Account Created!",
-                    description: "Please log in with your new credentials.",
-                    duration: 5000,
-                });
-                
-                // Clear the password field for security
-                setPassword('');
-
-            } catch (createErr: any) {
-                const errorMessage = createErr.message || "Failed to create account.";
-                setError(errorMessage);
-                toast({
-                    variant: "destructive",
-                    title: "Account Creation Failed",
-                    description: errorMessage,
-                });
-            }
-        } else {
-            const errorMessage = err.message || "An unknown error occurred.";
-            setError(errorMessage);
-            toast({
-                variant: "destructive",
-                title: "Login Failed",
-                description: errorMessage,
-            });
+            errorMessage = "Invalid email or password. Admin account not found.";
+        } else if (err.message) {
+            errorMessage = err.message;
         }
+        
+        setError(errorMessage);
+        toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: errorMessage,
+        });
     }
   };
   
@@ -120,7 +85,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle>Admin Login</CardTitle>
-            <CardDescription>Enter your credentials to access the admin panel. The first account created will be an admin.</CardDescription>
+            <CardDescription>Enter your credentials to access the admin panel. Please contact the developer to create an admin account.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -147,7 +112,7 @@ export default function LoginPage() {
               </div>
               {error && <p className="text-destructive text-sm">{error}</p>}
               <Button type="submit" className="w-full">
-                Login or Create Admin
+                Login
               </Button>
             </form>
           </CardContent>
