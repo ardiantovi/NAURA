@@ -43,7 +43,7 @@ export default function ProductDetailPage() {
                 <Card className="overflow-hidden">
                     <div className="grid md:grid-cols-2 gap-4 md:gap-8">
                         <div className="p-4">
-                            <Skeleton className="w-full aspect-video" />
+                            <Skeleton className="w-full aspect-square" />
                         </div>
                         <div className="p-4 md:p-8 flex flex-col">
                             <Skeleton className="h-6 w-1/4 mb-2" />
@@ -107,12 +107,12 @@ export default function ProductDetailPage() {
                 <CarouselContent>
                   {product.images && product.images.length > 0 ? product.images.map((imgUrl, index) => (
                     <CarouselItem key={index}>
-                      <div className="aspect-w-4 aspect-h-3 overflow-hidden rounded-lg">
+                      <div className="aspect-square overflow-hidden rounded-lg">
                         <Image
                           src={getImageUrl(imgUrl)}
                           alt={`${product.name} image ${index + 1}`}
                           width={800}
-                          height={600}
+                          height={800}
                           className="w-full h-full object-cover"
                           data-ai-hint="tech product"
                         />
@@ -120,7 +120,7 @@ export default function ProductDetailPage() {
                     </CarouselItem>
                   )) : (
                     <CarouselItem>
-                        <div className="aspect-w-4 aspect-h-3 overflow-hidden rounded-lg bg-muted flex items-center justify-center">
+                        <div className="aspect-square bg-muted flex items-center justify-center rounded-lg">
                             <span className="text-muted-foreground">No Image</span>
                         </div>
                     </CarouselItem>
@@ -154,7 +154,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Specifications */}
-          {product.specs && (
+          {product.specs && Object.keys(product.specs).length > 0 && (
             <div className="p-4 md:p-8">
                 <h2 className="text-2xl font-bold font-headline mb-4">Specifications</h2>
                 <Card>

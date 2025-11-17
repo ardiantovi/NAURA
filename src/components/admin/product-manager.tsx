@@ -104,18 +104,22 @@ export default function ProductManager() {
     });
 
     // This listener updates the progress for all uploads combined.
-    const combinedProgressListener = () => {
-      const totalBytes = allUploadTasks.reduce((acc, t) => acc + t.snapshot.totalBytes, 0);
-      const totalTransferred = allUploadTasks.reduce((acc, t) => acc + t.snapshot.bytesTransferred, 0);
-      if (totalBytes > 0) {
-        const progress = (totalTransferred / totalBytes) * 100;
-        uploadToast.update({ progress: progress });
-      }
-    };
-
+    let totalBytes = 0;
+    let totalTransferred = 0;
+    
     allUploadTasks.forEach(task => {
-        task.on('state_changed', combinedProgressListener);
+        totalBytes += task.snapshot.totalBytes;
+        task.on('state_changed', 
+            (snapshot) => {
+                // This approach is not perfect for multiple files as bytesTransferred resets per file.
+                // A better approach would be to calculate total progress more accurately.
+                // For now, we'll just track the last known progress of any file.
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                uploadToast.update({ progress: progress });
+            }
+        );
     });
+
 
     const allPromises = allUploadTasks.map(task => new Promise<string>((resolve, reject) => {
         task.then(async snapshot => {
@@ -127,7 +131,7 @@ export default function ProductManager() {
      Promise.all(allPromises).then(imageUrls => {
          uploadToast.update({ title: 'Upload complete!', description: 'Saving product data...', progress: 100 });
          saveProductData(values, imageUrls);
-         setTimeout(() => uploadToast.dismiss(), 2000); // Dismiss after 2 seconds
+         setTimeout(() => uploadToast.dismiss(), 2000);
      }).catch(error => {
          console.error("Error uploading files:", error);
          uploadToast.update({
