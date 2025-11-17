@@ -16,14 +16,13 @@ import { doc, setDoc } from 'firebase/firestore';
 async function grantAdminRole(firestore: any, user: User) {
     if (!firestore || !user) return;
     const adminRoleRef = doc(firestore, 'roles_admin', user.uid);
-    // This will now succeed because of the new security rule.
     await setDoc(adminRoleRef, {});
 }
 
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('guekece159@gmail.com');
-  const [password, setPassword] = useState('GUEKECE123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -31,6 +30,12 @@ export default function LoginPage() {
   const auth = useAuth();
   const firestore = useFirestore();
   const { toast } = useToast();
+
+  // Admin credentials (hardcoded for simplicity as requested)
+  const ADMIN_USERNAME = 'admin';
+  const ADMIN_PASSWORD = 'password123';
+  const ADMIN_EMAIL = 'guekece159@gmail.com';
+  const ADMIN_EMAIL_PASSWORD = 'GUEKECE123';
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -53,44 +58,50 @@ export default function LoginPage() {
     setError(null);
     setIsLoading(true);
 
+    // Check against the predefined username and password
+    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+        setError('Invalid username or password.');
+        toast({
+            variant: 'destructive',
+            title: 'Login Failed',
+            description: 'Invalid username or password.',
+        });
+        setIsLoading(false);
+        return;
+    }
+
+    // If credentials are correct, try to sign in with the actual admin email
     try {
-        await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_EMAIL_PASSWORD);
         toast({ title: "Login successful!"});
-        // onAuthStateChanged will handle the redirect in the useEffect hook
+        // onAuthStateChanged will handle the redirect
     } catch (err: any) {
-        // This logic handles the case where the admin user does not yet exist.
-        // It creates the user, grants them the admin role, and then prompts for a manual login.
+        // If the admin user doesn't exist in Firebase Auth, create it.
         if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
             try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const userCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_EMAIL_PASSWORD);
                 const newUser = userCredential.user;
                 
-                // Grant admin role and crucially wait for it to complete.
+                // Grant admin role
                 await grantAdminRole(firestore, newUser);
                 
-                // IMPORTANT: Do NOT log the user in automatically.
-                // Inform them that the account is created and they now need to log in with it.
-                // This forces a token refresh and guarantees the admin role is recognized.
                 toast({
                     title: "Admin Account Created",
-                    description: "Your admin account has been created. Please log in to continue.",
+                    description: "Initial admin setup complete. Please log in again.",
                     duration: 7000,
                 });
                 
-                // Clear the password field for security after account creation
-                setPassword('');
-
             } catch (createErr: any) {
-                const errorMessage = createErr.message || "An unknown error occurred during sign up.";
+                const errorMessage = createErr.message || "An unknown error occurred during admin setup.";
                 setError(errorMessage);
                 toast({
                     variant: "destructive",
-                    title: "Sign Up Failed",
+                    title: "Admin Setup Failed",
                     description: errorMessage,
                 });
             }
         } else {
-            // Handle other login errors (e.g., wrong password, network issues)
+            // Handle other login errors
             const errorMessage = err.message || "An unknown error occurred during login.";
             setError(errorMessage);
             toast({
@@ -127,18 +138,18 @@ export default function LoginPage() {
         <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle>Admin Login</CardTitle>
-            <CardDescription>Enter your credentials. If the account doesn't exist, the first admin account will be created for you.</CardDescription>
+            <CardDescription>Enter your admin username and password.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text"
+                  placeholder="admin"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   disabled={isLoading}
                 />
@@ -156,7 +167,7 @@ export default function LoginPage() {
               </div>
               {error && <p className="text-destructive text-sm">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Processing...' : 'Login or Create Admin'}
+                {isLoading ? 'Processing...' : 'Login'}
               </Button>
             </form>
           </CardContent>
