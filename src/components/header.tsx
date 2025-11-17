@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Gem, TriangleAlert } from 'lucide-react';
+import { Gem, TriangleAlert, ShoppingBag } from 'lucide-react';
 import { Button } from './ui/button';
 
 export default function Header() {
@@ -15,6 +15,12 @@ export default function Header() {
             <span className="font-bold text-xl font-headline">NAURA ELECTRONIC</span>
           </Link>
           <div className="flex items-center gap-4">
+            <Button variant="ghost" asChild>
+                <Link href="/products">
+                    <ShoppingBag className="mr-2 h-5 w-5"/>
+                    Products
+                </Link>
+            </Button>
             <div className="flex items-center gap-2 text-destructive font-semibold text-sm">
                 <TriangleAlert className="h-5 w-5" />
                 <span>TIDAK BISA COD!</span>
