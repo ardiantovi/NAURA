@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -236,7 +236,7 @@ export default function ProductManager() {
       <ProductForm
         isOpen={isFormOpen}
         onOpenChange={setIsFormOpen}
-        onSubmit={handleFormSumbit}
+        onSubmit={handleFormSubmit}
         product={selectedProduct}
       />
 
