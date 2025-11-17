@@ -107,16 +107,18 @@ export default function ProductsPage() {
           {/* Product Grid and Search */}
           <div>
             <form onSubmit={handleSearchSubmit}>
-                <div className="relative mb-8">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                        type="search"
-                        placeholder="Cari produk dengan AI... (cth: speaker bassnya bagus)"
-                        className="w-full pl-10 pr-24 text-base"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <Button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2" disabled={isSearching}>
+                <div className="flex w-full items-center space-x-2 mb-8">
+                    <div className="relative flex-grow">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Cari produk dengan AI... (cth: speaker bassnya bagus)"
+                            className="w-full pl-10 text-base"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <Button type="submit" disabled={isSearching}>
                         {isSearching ? <Loader2 className="animate-spin" /> : 'Cari'}
                     </Button>
                 </div>
