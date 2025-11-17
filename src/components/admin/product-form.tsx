@@ -40,10 +40,7 @@ const formSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   price: z.coerce.number().positive('Price must be positive'),
   brand: z.string().min(1, 'Brand is required'),
-  images: z.string().min(1, "At least one image URL is required.").refine(
-    (s) => s.split('\n').every(url => z.string().url().safeParse(url).success || url === ''),
-    "One or more URLs are invalid. Please provide one valid URL per line."
-  ),
+  images: z.custom<FileList>().refine(files => files && files.length > 0, 'At least one image is required.'),
 });
 
 export type ProductFormValues = z.infer<typeof formSchema>;
@@ -57,13 +54,12 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: ProductFormProps) {
-
   const defaultValues = {
     name: product?.name || '',
     description: product?.description || '',
     price: product?.price || 0,
     brand: product?.brand || '',
-    images: product?.images?.join('\n') || '',
+    images: undefined,
   };
 
   const form = useForm<ProductFormValues>({
@@ -72,13 +68,15 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
   });
 
   useEffect(() => {
-    form.reset({
-      name: product?.name || '',
-      description: product?.description || '',
-      price: product?.price || 0,
-      brand: product?.brand || '',
-      images: product?.images?.join('\n') || '',
-    });
+    if (isOpen) {
+      form.reset({
+        name: product?.name || '',
+        description: product?.description || '',
+        price: product?.price || 0,
+        brand: product?.brand || '',
+        images: undefined,
+      });
+    }
   }, [product, isOpen, form]);
 
 
@@ -86,6 +84,8 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
     onSubmit(values);
     form.reset();
   };
+
+  const imageRef = form.register("images");
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -168,12 +168,13 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
               name="images"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Product Image URLs</FormLabel>
+                  <FormLabel>Product Images</FormLabel>
                   <FormControl>
-                    <Textarea
-                      {...field}
-                      rows={3}
-                      placeholder="Enter one image URL per line..."
+                     <Input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      {...imageRef}
                     />
                   </FormControl>
                    <FormMessage />

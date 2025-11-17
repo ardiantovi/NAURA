@@ -23,7 +23,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 // Simple Banner type for this component
 interface Banner {
@@ -36,7 +36,7 @@ interface Banner {
 const formSchema = z.object({
   altText: z.string().min(1, 'Alt text is required'),
   linkUrl: z.string().min(1, 'Link URL is required.'),
-  imageUrl: z.string().url('Must be a valid image URL'),
+  image: z.custom<FileList>().refine(files => files && files.length > 0, 'An image is required.'),
 });
 
 export type BannerFormValues = z.infer<typeof formSchema>;
@@ -53,7 +53,7 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
   const defaultValues = {
     altText: banner?.altText || '',
     linkUrl: banner?.linkUrl || '',
-    imageUrl: banner?.imageUrl || '',
+    image: undefined,
   };
 
   const form = useForm<BannerFormValues>({
@@ -62,17 +62,21 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
   });
 
   useEffect(() => {
-    form.reset({
-        altText: banner?.altText || '',
-        linkUrl: banner?.linkUrl || '',
-        imageUrl: banner?.imageUrl || '',
-    });
+    if (isOpen) {
+        form.reset({
+            altText: banner?.altText || '',
+            linkUrl: banner?.linkUrl || '',
+            image: undefined,
+        });
+    }
   }, [banner, isOpen, form]);
 
   const handleSubmit = (values: BannerFormValues) => {
     onSubmit(values);
     form.reset();
   };
+
+  const imageRef = form.register("image");
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -87,14 +91,15 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
              <FormField
               control={form.control}
-              name="imageUrl"
+              name="image"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image URL</FormLabel>
+                  <FormLabel>Banner Image</FormLabel>
                   <FormControl>
                      <Input
-                      {...field}
-                      placeholder="https://example.com/image.png"
+                      type="file"
+                      accept="image/*"
+                      {...imageRef}
                     />
                   </FormControl>
                   <FormMessage />
