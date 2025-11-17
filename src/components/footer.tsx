@@ -19,7 +19,6 @@ export default function Footer() {
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
             >
             <MapPin className="h-4 w-4" />
-            <span>Temukan kami di Google Maps</span>
             </Link>
         </div>
       </div>
