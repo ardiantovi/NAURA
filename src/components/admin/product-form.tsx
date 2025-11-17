@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -31,25 +32,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { brands } from '@/lib/data';
-
-// Zod schema for file validation
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   price: z.coerce.number().positive('Price must be positive'),
   brand: z.string().min(1, 'Brand is required'),
-  images: z.custom<FileList>()
-    .refine(files => files === null || (files && files.length > 0), 'At least one image is required.')
-    .refine(files => files === null || Array.from(files).every(file => file.size <= MAX_FILE_SIZE), `Max file size is 5MB.`)
-    .refine(
-      files => files === null || Array.from(files).every(file => ACCEPTED_IMAGE_TYPES.includes(file.type)),
-      '.jpg, .jpeg, .png and .webp files are accepted.'
-    ).nullable().optional(),
+  images: z.string().min(1, "At least one image URL is required.").refine(
+    (s) => s.split('\n').every(url => z.string().url().safeParse(url).success || url === ''),
+    "One or more URLs are invalid. Please provide one valid URL per line."
+  ),
 });
 
 export type ProductFormValues = z.infer<typeof formSchema>;
@@ -63,23 +57,17 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: ProductFormProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const defaultValues = {
     name: product?.name || '',
     description: product?.description || '',
     price: product?.price || 0,
     brand: product?.brand || '',
-    images: null,
+    images: product?.images?.join('\n') || '',
   };
-  
-  const formSchemaWithContext = formSchema.refine(data => !!product || (data.images && data.images.length > 0), {
-    message: "At least one image is required.",
-    path: ["images"],
-  });
 
   const form = useForm<ProductFormValues>({
-    resolver: zodResolver(formSchemaWithContext),
+    resolver: zodResolver(formSchema),
     defaultValues,
   });
 
@@ -89,12 +77,8 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
       description: product?.description || '',
       price: product?.price || 0,
       brand: product?.brand || '',
-      images: null,
+      images: product?.images?.join('\n') || '',
     });
-    // Reset file input when dialog opens
-    if (isOpen && fileInputRef.current) {
-        fileInputRef.current.value = '';
-    }
   }, [product, isOpen, form]);
 
 
@@ -108,6 +92,9 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+           <DialogDescription>
+            Fill out the form below to {product ? 'update the' : 'create a new'} product. Click save when you&apos;re done.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -179,25 +166,17 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, product }: Product
             <FormField
               control={form.control}
               name="images"
-              render={({ field: { onChange, value, ...rest } }) => (
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Product Images</FormLabel>
+                  <FormLabel>Product Image URLs</FormLabel>
                   <FormControl>
-                    <Input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      ref={fileInputRef}
-                      onChange={(e) => onChange(e.target.files)}
-                      {...rest}
+                    <Textarea
+                      {...field}
+                      rows={3}
+                      placeholder="Enter one image URL per line..."
                     />
                   </FormControl>
                    <FormMessage />
-                  {product && (
-                     <p className="text-sm text-muted-foreground">
-                        Current images are preserved. Upload new files only if you want to replace them.
-                    </p>
-                  )}
                 </FormItem>
               )}
             />

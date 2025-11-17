@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -32,20 +33,10 @@ interface Banner {
     linkUrl: string;
 }
 
-// Zod schema for file validation
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-
 const formSchema = z.object({
   altText: z.string().min(1, 'Alt text is required'),
-  linkUrl: z.string().url('Must be a valid URL'),
-  image: z.custom<FileList>()
-    .refine(files => files === null || files.length === 1, 'An image is required.')
-    .refine(files => files === null || files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
-    .refine(
-      files => files === null || ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-      '.jpg, .jpeg, .png and .webp files are accepted.'
-    ).nullable().optional(),
+  linkUrl: z.string().min(1, 'Link URL is required.'),
+  imageUrl: z.string().url('Must be a valid image URL'),
 });
 
 export type BannerFormValues = z.infer<typeof formSchema>;
@@ -59,21 +50,14 @@ interface BannerFormProps {
 }
 
 export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFormProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const defaultValues = {
     altText: banner?.altText || '',
     linkUrl: banner?.linkUrl || '',
-    image: null,
+    imageUrl: banner?.imageUrl || '',
   };
 
-  const formSchemaWithContext = formSchema.refine(
-    (data) => !!banner || (data.image && data.image.length > 0), {
-    message: "An image is required.",
-    path: ["image"],
-  });
-
   const form = useForm<BannerFormValues>({
-    resolver: zodResolver(formSchemaWithContext),
+    resolver: zodResolver(formSchema),
     defaultValues,
   });
 
@@ -81,11 +65,8 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
     form.reset({
         altText: banner?.altText || '',
         linkUrl: banner?.linkUrl || '',
-        image: null
+        imageUrl: banner?.imageUrl || '',
     });
-     if (isOpen && fileInputRef.current) {
-        fileInputRef.current.value = '';
-    }
   }, [banner, isOpen, form]);
 
   const handleSubmit = (values: BannerFormValues) => {
@@ -98,30 +79,25 @@ export function BannerForm({ isOpen, onOpenChange, onSubmit, banner }: BannerFor
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{banner ? 'Edit Banner' : 'Add New Banner'}</DialogTitle>
+          <DialogDescription>
+            Fill out the form below to {banner ? 'update the' : 'create a new'} banner. Click save when you&apos;re done.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
+             <FormField
               control={form.control}
-              name="image"
-              render={({ field: { onChange, value, ...rest } }) => (
+              name="imageUrl"
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Banner Image</FormLabel>
+                  <FormLabel>Image URL</FormLabel>
                   <FormControl>
                      <Input
-                      type="file"
-                      accept="image/*"
-                      ref={fileInputRef}
-                      onChange={(e) => onChange(e.target.files)}
-                      {...rest}
+                      {...field}
+                      placeholder="https://example.com/image.png"
                     />
                   </FormControl>
                   <FormMessage />
-                   {banner && (
-                     <p className="text-sm text-muted-foreground">
-                        Current image is preserved. Upload a new file only if you want to replace it.
-                    </p>
-                  )}
                 </FormItem>
               )}
             />
