@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Gem } from 'lucide-react';
 
 export default function Header() {
 
@@ -10,7 +9,6 @@ export default function Header() {
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
-            <Gem className="h-7 w-7 text-primary" />
             <span className="font-bold text-xl font-headline">PILIHAN YANG TEPAT ADA DI NAURA</span>
           </Link>
         </div>
