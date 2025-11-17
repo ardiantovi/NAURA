@@ -9,8 +9,7 @@ import ProductCard from '@/components/product-card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search, Zap, Annoyed } from 'lucide-react';
-import PersonalizedRecommendations from '@/components/personalized-recommendations';
+import { Search, Annoyed } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -20,7 +19,7 @@ import {
 } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, DocumentData } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -189,15 +188,6 @@ export default function Home() {
                 </CardContent>
               </Card>
             )}
-
-            {/* Personalized Recommendations */}
-            <section className="mt-16">
-              <div className="flex items-center mb-6">
-                <Zap className="h-7 w-7 text-primary mr-3" />
-                <h2 className="text-3xl font-bold font-headline">Just For You</h2>
-              </div>
-              <PersonalizedRecommendations />
-            </section>
           </div>
         </div>
       </main>
