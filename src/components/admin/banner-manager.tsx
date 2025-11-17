@@ -113,7 +113,7 @@ export default function BannerManager() {
             (error) => {
                 console.error('Upload failed:', error);
                 dismiss(toastId);
-                const errorToast = toast({
+                toast({
                   title: 'Upload Failed',
                   description: error.message,
                   variant: 'destructive',
