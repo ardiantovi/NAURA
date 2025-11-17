@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, User, setPersistence, browserSessionPersistence } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 
 async function grantAdminRole(firestore: any, user: User) {
@@ -72,6 +72,7 @@ export default function LoginPage() {
 
     // If credentials are correct, try to sign in with the actual admin email
     try {
+        await setPersistence(auth, browserSessionPersistence);
         await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_EMAIL_PASSWORD);
         toast({ title: "Login successful!"});
         // onAuthStateChanged will handle the redirect
