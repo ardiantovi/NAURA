@@ -3,25 +3,26 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Aturan umum: Hanya izinkan pengguna yang sudah login untuk membaca dan menulis.
-    match /{allPaths=**} {
-      allow read, write: if request.auth != null;
-    }
-
     // Aturan lebih spesifik untuk folder 'products'
     match /products/{allPaths=**} {
-      // Izinkan siapapun membaca gambar produk (untuk ditampilkan di toko)
-      allow get;
-      // Hanya izinkan pengguna terautentikasi (admin) untuk mengunggah/menghapus
+      // Izinkan siapapun untuk MEMBACA (read) gambar produk (untuk ditampilkan di toko).
+      // 'read' mencakup 'get' dan 'list'.
+      allow read;
+      // Hanya izinkan pengguna terautentikasi (admin) untuk MENULIS (mengunggah/menghapus/mengupdate).
       allow write: if request.auth != null;
     }
 
     // Aturan lebih spesifik untuk folder 'banners'
     match /banners/{allPaths=**} {
-      // Izinkan siapapun membaca gambar banner
-      allow get;
-       // Hanya izinkan pengguna terautentikasi (admin) untuk mengunggah/menghapus
+      // Izinkan siapapun untuk MEMBACA gambar banner.
+      allow read;
+      // Hanya izinkan pengguna terautentikasi (admin) untuk MENULIS.
       allow write: if request.auth != null;
+    }
+
+    // Aturan untuk folder 'uploads' jika ada (opsional, sebagai pengaman)
+    match /uploads/{allPaths=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
