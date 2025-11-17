@@ -32,8 +32,8 @@ export default function LoginPage() {
   const { toast } = useToast();
 
   // Admin credentials (hardcoded for simplicity as requested)
-  const ADMIN_USERNAME = 'admin';
-  const ADMIN_PASSWORD = 'password123';
+  const ADMIN_USERNAME = 'ardiantovi';
+  const ADMIN_PASSWORD = 'GUEKECE123';
   const ADMIN_EMAIL = 'guekece159@gmail.com';
   const ADMIN_EMAIL_PASSWORD = 'GUEKECE123';
 
