@@ -3,7 +3,7 @@
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
-import { Auth, User, onAuthStateChanged } from 'firebase/auth';
+import { Auth, User, onAuthStateChanged, setPersistence, browserSessionPersistence } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 
 interface FirebaseProviderProps {
@@ -73,20 +73,35 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
       return;
     }
+    
+    let unsubscribe: () => void;
 
-    setUserAuthState({ user: null, isUserLoading: true, userError: null }); // Reset on auth instance change
+    // Set persistence to session before subscribing to auth state changes
+    setPersistence(auth, browserSessionPersistence)
+      .then(() => {
+        setUserAuthState({ user: null, isUserLoading: true, userError: null }); // Reset on auth instance change
 
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (firebaseUser) => { // Auth state determined
-        setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
-      },
-      (error) => { // Auth listener error
-        console.error("FirebaseProvider: onAuthStateChanged error:", error);
+        unsubscribe = onAuthStateChanged(
+          auth,
+          (firebaseUser) => { // Auth state determined
+            setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+          },
+          (error) => { // Auth listener error
+            console.error("FirebaseProvider: onAuthStateChanged error:", error);
+            setUserAuthState({ user: null, isUserLoading: false, userError: error });
+          }
+        );
+      })
+      .catch((error) => {
+        console.error("FirebaseProvider: setPersistence error:", error);
         setUserAuthState({ user: null, isUserLoading: false, userError: error });
+      });
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe(); // Cleanup
       }
-    );
-    return () => unsubscribe(); // Cleanup
+    };
   }, [auth]); // Depends on the auth instance
 
   // Memoize the context value

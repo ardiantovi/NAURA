@@ -72,7 +72,7 @@ export default function LoginPage() {
 
     // If credentials are correct, try to sign in with the actual admin email
     try {
-        await setPersistence(auth, browserSessionPersistence);
+        // Persistence is now handled in FirebaseProvider
         await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_EMAIL_PASSWORD);
         toast({ title: "Login successful!"});
         // onAuthStateChanged will handle the redirect
