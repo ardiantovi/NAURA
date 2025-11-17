@@ -1,21 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
-import Header from '@/components/header';
-import Footer from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, MessageCircle, MapPin } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import Header from '@/components/header';
+import Footer from '@/components/footer';
 
 export default function Home() {
   const phoneNumber = "6285183280606";
@@ -54,7 +45,7 @@ export default function Home() {
                 className="w-full h-16 text-xl justify-between fade-in-up"
                 style={{ animationDelay: '300ms' }}
               >
-                Produk
+                PRODUK
                 <ArrowRight className="h-6 w-6" />
               </Button>
             </Link>
