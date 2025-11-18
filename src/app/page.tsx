@@ -20,8 +20,8 @@ export default function Home() {
       <Header />
 
       <main className="flex-grow container mx-auto px-4 py-8 z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center h-full">
-          <div className="flex flex-col items-center justify-center gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start h-full">
+          <div className="flex flex-col items-center justify-center gap-8 h-full">
             {/* Logo Section */}
             <div className="flex justify-center fade-in-up" style={{ animationDelay: '100ms' }}>
               <Image
@@ -62,7 +62,7 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="hidden md:flex flex-col justify-center h-full">
+          <div className="hidden md:flex flex-col justify-center h-full max-h-[80vh]">
             <CustomerReviews />
           </div>
 
