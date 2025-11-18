@@ -8,8 +8,10 @@ import Footer from '@/components/footer';
 import { FallingStars } from '@/components/ui/falling-stars';
 
 export default function Home() {
-  const phoneNumber = "6285183280606";
-  const whatsappUrl = `https://wa.me/${phoneNumber}?text=Halo, saya tertarik dengan produk Anda.`;
+  const phoneNumber1 = "6285183280606";
+  const whatsappUrl1 = `https://wa.me/${phoneNumber1}?text=Halo, saya tertarik dengan produk Anda.`;
+  const phoneNumber2 = "628563621488";
+  const whatsappUrl2 = `https://wa.me/${phoneNumber2}?text=Halo, saya tertarik dengan produk Anda.`;
   const mapsUrl = "https://maps.app.goo.gl/GgbWLVomXgASTnu6A";
 
   return (
@@ -34,12 +36,21 @@ export default function Home() {
 
           {/* Links Section */}
           <div className="w-full max-w-md flex flex-col gap-6 overflow-hidden">
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="animate-in animate-slide-in-left" style={{ animationDelay: '500ms', animationFillMode: 'backwards' }}>
+            <a href={whatsappUrl1} target="_blank" rel="noopener noreferrer" className="animate-in animate-slide-in-left" style={{ animationDelay: '500ms', animationFillMode: 'backwards' }}>
               <Button
                 size="lg"
                 className="w-full h-16 text-xl justify-between bg-[#25D366] text-white hover:bg-[#25D366]/90"
               >
                 ADMIN 1
+                <Phone className="h-6 w-6" />
+              </Button>
+            </a>
+            <a href={whatsappUrl2} target="_blank" rel="noopener noreferrer" className="animate-in animate-slide-in-left" style={{ animationDelay: '600ms', animationFillMode: 'backwards' }}>
+              <Button
+                size="lg"
+                className="w-full h-16 text-xl justify-between bg-[#25D366] text-white hover:bg-[#25D366]/90"
+              >
+                ADMIN 2
                 <Phone className="h-6 w-6" />
               </Button>
             </a>
