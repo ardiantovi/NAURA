@@ -8,6 +8,7 @@ import { ArrowRight, MessageCircle, MapPin } from 'lucide-react';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { FallingStars } from '@/components/ui/falling-stars';
+import ChatWidget from '@/components/ChatWidget';
 
 
 export default function Home() {
@@ -64,6 +65,7 @@ export default function Home() {
       </main>
 
       <Footer />
+      <ChatWidget />
     </div>
   );
 }
