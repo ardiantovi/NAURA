@@ -9,7 +9,7 @@ export default function Header() {
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
-            <span className="font-bold text-base font-headline">PILIHAN YANG TEPAT ADA DI NAURA</span>
+            <span className="font-bold text-base">PILIHAN YANG TEPAT ADA DI NAURA</span>
           </Link>
           <div className="font-bold text-foreground text-base">
             TIDAK BISA COD
