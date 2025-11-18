@@ -22,7 +22,7 @@ export default function Home() {
       <main className="flex-grow container mx-auto px-4 py-8 z-10 flex items-center justify-center">
         <div className="flex flex-col items-center justify-center gap-8 h-full">
           {/* Logo Section */}
-          <div className="flex justify-center animate-in animate-zoom-in" style={{ animationDelay: '300ms', animationFillMode: 'backwards' }}>
+          <div className="flex justify-center animate-in animate-slide-in-left" style={{ animationDelay: '300ms', animationFillMode: 'backwards' }}>
             <Image
               src="https://image2url.com/images/1763435989049-14688da4-1c6a-4bf9-95fe-1d1b6a37b35d.png"
               alt="Naura Electronic Logo"
@@ -36,7 +36,7 @@ export default function Home() {
 
           {/* Links Section */}
           <div className="w-full max-w-md flex flex-col gap-6 overflow-hidden">
-            <a href={whatsappUrl1} target="_blank" rel="noopener noreferrer" className="fade-in-up" style={{ animationDelay: '500ms', animationFillMode: 'backwards' }}>
+            <a href={whatsappUrl1} target="_blank" rel="noopener noreferrer" className="animate-in animate-slide-in-right" style={{ animationDelay: '500ms', animationFillMode: 'backwards' }}>
               <Button
                 size="lg"
                 className="w-full h-16 text-xl justify-between bg-secondary/50 text-secondary-foreground hover:bg-secondary/70 border border-secondary"
@@ -45,7 +45,7 @@ export default function Home() {
                 <Phone className="h-6 w-6" />
               </Button>
             </a>
-            <a href={whatsappUrl2} target="_blank" rel="noopener noreferrer" className="fade-in-up" style={{ animationDelay: '650ms', animationFillMode: 'backwards' }}>
+            <a href={whatsappUrl2} target="_blank" rel="noopener noreferrer" className="animate-in animate-slide-in-right" style={{ animationDelay: '650ms', animationFillMode: 'backwards' }}>
               <Button
                 size="lg"
                 className="w-full h-16 text-xl justify-between bg-secondary/50 text-secondary-foreground hover:bg-secondary/70 border border-secondary"
@@ -54,7 +54,7 @@ export default function Home() {
                 <Phone className="h-6 w-6" />
               </Button>
             </a>
-            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="fade-in-up" style={{ animationDelay: '800ms', animationFillMode: 'backwards' }}>
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="animate-in animate-slide-in-right" style={{ animationDelay: '800ms', animationFillMode: 'backwards' }}>
               <Button
                 size="lg"
                 className="w-full h-16 text-xl justify-between bg-secondary/50 text-secondary-foreground hover:bg-secondary/70 border border-secondary"
