@@ -65,6 +65,59 @@
 }
 
 @layer utilities {
+  .animate-in {
+    animation-fill-mode: forwards;
+    animation-timing-function: ease-out;
+  }
+
+  .animate-zoom-in {
+    animation-name: zoom-in-fade;
+    animation-duration: 0.7s;
+  }
+
+  .animate-slide-in-left {
+    animation-name: slide-in-from-left;
+    animation-duration: 0.6s;
+  }
+
+  .animate-slide-in-right {
+    animation-name: slide-in-from-right;
+    animation-duration: 0.6s;
+  }
+
+  @keyframes zoom-in-fade {
+    from {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slide-in-from-left {
+    from {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slide-in-from-right {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
   .fade-in-up {
     animation: fade-in-up 0.5s ease-out forwards;
     opacity: 0;

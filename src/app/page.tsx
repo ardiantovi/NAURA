@@ -20,7 +20,7 @@ export default function Home() {
       <main className="flex-grow container mx-auto px-4 py-8 z-10 flex items-center justify-center">
         <div className="flex flex-col items-center justify-center gap-8 h-full">
           {/* Logo Section */}
-          <div className="flex justify-center fade-in-up" style={{ animationDelay: '100ms' }}>
+          <div className="flex justify-center animate-in animate-zoom-in" style={{ animationDelay: '100ms', animationFillMode: 'backwards' }}>
             <Image
               src="https://image2url.com/images/1763435989049-14688da4-1c6a-4bf9-95fe-1d1b6a37b35d.png"
               alt="Naura Electronic Logo"
@@ -33,24 +33,22 @@ export default function Home() {
           </div>
 
           {/* Links Section */}
-          <div className="w-full max-w-md flex flex-col gap-6">
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+          <div className="w-full max-w-md flex flex-col gap-6 overflow-hidden">
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="animate-in animate-slide-in-left" style={{ animationDelay: '500ms', animationFillMode: 'backwards' }}>
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full h-16 text-xl justify-between fade-in-up"
-                style={{ animationDelay: '500ms' }}
+                className="w-full h-16 text-xl justify-between"
               >
                 HUBUNGI KAMI DI WHATSAPP
                 <MessageCircle className="h-6 w-6" />
               </Button>
             </a>
-            <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="animate-in animate-slide-in-right" style={{ animationDelay: '700ms', animationFillMode: 'backwards' }}>
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full h-16 text-xl justify-between fade-in-up"
-                style={{ animationDelay: '700ms' }}
+                className="w-full h-16 text-xl justify-between"
               >
                 KUNJUNGI TOKO KAMI
                 <MapPin className="h-6 w-6" />
