@@ -56,7 +56,7 @@ export default function Home() {
             </a>
             <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="animate-in animate-slide-in-right" style={{ animationDelay: '700ms', animationFillMode: 'backwards' }}>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="lg"
                 className="w-full h-16 text-xl justify-between"
               >
