@@ -39,7 +39,7 @@ export default function Home() {
                 size="lg"
                 className="w-full h-16 text-xl justify-between bg-[#25D366] text-white hover:bg-[#25D366]/90"
               >
-                TEMA WHATSAPP
+                ADMIN 1
                 <Phone className="h-6 w-6" />
               </Button>
             </a>
