@@ -21,7 +21,7 @@ export default function Home() {
       <Header />
 
       <main className="flex-grow flex items-center justify-center container mx-auto px-4 py-8 z-10">
-        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
+        <div className="w-full max-w-md flex flex-col items-center gap-8">
           {/* Logo Section */}
           <div className="flex justify-center fade-in-up" style={{ animationDelay: '100ms' }}>
             <Image
@@ -36,7 +36,7 @@ export default function Home() {
           </div>
 
           {/* Links Section */}
-          <div className="flex flex-col gap-6">
+          <div className="w-full flex flex-col gap-6">
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
               <Button
                 variant="outline"
