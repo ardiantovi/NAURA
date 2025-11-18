@@ -41,17 +41,6 @@ export default function Home() {
 
           {/* Links Section */}
           <div className="flex flex-col gap-6">
-            <Link href="/products" passHref>
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full h-16 text-xl uppercase justify-between fade-in-up"
-                style={{ animationDelay: '300ms' }}
-              >
-                PRODUK
-                <ArrowRight className="h-6 w-6" />
-              </Button>
-            </Link>
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
               <Button
                 variant="outline"
