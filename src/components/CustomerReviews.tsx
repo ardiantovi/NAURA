@@ -1,9 +1,15 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Star } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+import React from "react";
 
 const reviews = [
   {
@@ -62,31 +68,45 @@ const StarRating = ({ rating }: { rating: number }) => (
 );
 
 export function CustomerReviews() {
+  const plugin = React.useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: true, stopOnMouseEnter: true })
+  );
+
   return (
     <div className="w-full h-full max-w-md mx-auto flex flex-col fade-in-up" style={{ animationDelay: '900ms' }}>
-       <h2 className="text-2xl font-headline text-center text-foreground mb-6">Apa Kata Mereka?</h2>
-       <ScrollArea className="flex-grow">
-        <div className="space-y-6 pr-4">
-            {reviews.map((review, index) => (
-                <Card key={index} className="bg-card/50 backdrop-blur-sm border-white/10">
+      <h2 className="text-2xl font-headline text-center text-foreground mb-6">Apa Kata Mereka?</h2>
+      <Carousel
+        opts={{
+          align: "start",
+          loop: true,
+        }}
+        orientation="vertical"
+        plugins={[plugin.current]}
+        className="w-full flex-grow overflow-hidden"
+      >
+        <CarouselContent className="-mt-4 h-full">
+          {[...reviews, ...reviews].map((review, index) => (
+            <CarouselItem key={index} className="pt-4 basis-1/3">
+              <Card className="bg-card/50 backdrop-blur-sm border-white/10 h-full">
                 <CardHeader>
-                    <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4">
                     <Avatar>
-                        <AvatarFallback>{review.initials}</AvatarFallback>
+                      <AvatarFallback>{review.initials}</AvatarFallback>
                     </Avatar>
                     <div>
-                        <CardTitle className="text-base font-semibold">{review.name}</CardTitle>
-                        <StarRating rating={review.rating} />
+                      <CardTitle className="text-base font-semibold">{review.name}</CardTitle>
+                      <StarRating rating={review.rating} />
                     </div>
-                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-muted-foreground italic">&quot;{review.comment}&quot;</p>
+                  <p className="text-sm text-muted-foreground italic">&quot;{review.comment}&quot;</p>
                 </CardContent>
-                </Card>
-            ))}
-        </div>
-      </ScrollArea>
+              </Card>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
     </div>
   );
 }
