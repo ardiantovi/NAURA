@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, MapPin } from 'lucide-react';
+import { Phone, MapPin } from 'lucide-react';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { FallingStars } from '@/components/ui/falling-stars';
@@ -36,12 +36,11 @@ export default function Home() {
           <div className="w-full max-w-md flex flex-col gap-6 overflow-hidden">
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="animate-in animate-slide-in-left" style={{ animationDelay: '500ms', animationFillMode: 'backwards' }}>
               <Button
-                variant="outline"
                 size="lg"
-                className="w-full h-16 text-xl justify-between"
+                className="w-full h-16 text-xl justify-between bg-[#25D366] text-white hover:bg-[#25D366]/90"
               >
                 TEMA WHATSAPP
-                <MessageCircle className="h-6 w-6" />
+                <Phone className="h-6 w-6" />
               </Button>
             </a>
             <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="animate-in animate-slide-in-right" style={{ animationDelay: '700ms', animationFillMode: 'backwards' }}>
