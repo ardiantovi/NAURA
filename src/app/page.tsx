@@ -40,7 +40,7 @@ export default function Home() {
                 size="lg"
                 className="w-full h-16 text-xl justify-between"
               >
-                HUBUNGI KAMI DI WHATSAPP
+                TEMA WHATSAPP
                 <MessageCircle className="h-6 w-6" />
               </Button>
             </a>
