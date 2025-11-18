@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { cn } from '@/lib/utils';
 
 export function FallingStars({ count = 50 }: { count?: number }) {
   const [stars, setStars] = useState<
@@ -16,6 +15,11 @@ export function FallingStars({ count = 50 }: { count?: number }) {
   >([]);
 
   useEffect(() => {
+    // This effect should only run on the client
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const generateStars = () => {
       const newStars = Array.from({ length: count }, (_, i) => {
         const size = Math.random() * 2.5 + 1; // Star size between 1px and 3.5px
