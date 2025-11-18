@@ -38,9 +38,8 @@ export default function Home() {
           <div className="w-full max-w-md flex flex-col gap-6 overflow-hidden">
             <a href={whatsappUrl1} target="_blank" rel="noopener noreferrer" className="animate-in animate-slide-in-left" style={{ animationDelay: '500ms', animationFillMode: 'backwards' }}>
               <Button
-                variant="outline"
                 size="lg"
-                className="w-full h-16 text-xl justify-between border-[#25D366] bg-[#25D366]/30 text-white hover:bg-[#25D366]/50 hover:text-white"
+                className="w-full h-16 text-xl justify-between bg-secondary/50 text-secondary-foreground hover:bg-secondary/70 border border-secondary"
               >
                 ADMIN 1
                 <Phone className="h-6 w-6" />
@@ -48,9 +47,8 @@ export default function Home() {
             </a>
             <a href={whatsappUrl2} target="_blank" rel="noopener noreferrer" className="animate-in animate-slide-in-left" style={{ animationDelay: '600ms', animationFillMode: 'backwards' }}>
               <Button
-                variant="outline"
                 size="lg"
-                className="w-full h-16 text-xl justify-between border-[#25D366] bg-[#25D366]/30 text-white hover:bg-[#25D366]/50 hover:text-white"
+                className="w-full h-16 text-xl justify-between bg-secondary/50 text-secondary-foreground hover:bg-secondary/70 border border-secondary"
               >
                 ADMIN 2
                 <Phone className="h-6 w-6" />
